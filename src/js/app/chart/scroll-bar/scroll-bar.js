@@ -15,12 +15,12 @@ export default class ScrollBar extends Graph {
 
     const diagram = new Diagram(engine, this);
 
-    const frameLeft = new FrameSide(engine, this);
+    const frameLeft = new FrameSide(engine, this, -1);
     frameLeft.anchorX = 1;
     frameLeft.anchorY = 0.5;
     frameLeft.color = frameColor;
 
-    const frameRight = new FrameSide(engine, this);
+    const frameRight = new FrameSide(engine, this, 1);
     frameRight.anchorX = 0;
     frameRight.anchorY = 0.5;
     frameRight.color = frameColor;
@@ -30,16 +30,18 @@ export default class ScrollBar extends Graph {
     frame.anchorY = 0.5;
     frame.color = frameColor;
 
-    frameLeft.onInputMove.add(this.handleFrameLeftMove, this);
-    frameRight.onInputMove.add(this.handleFrameRightMove, this);
-    frame.onInputMove.add(this.handleFrameMove, this);
-
     const overlayLeft = new Overlay(engine, this);
     overlayLeft.color = overlayColor;
 
     const overlayRight = new Overlay(engine, this);
     overlayRight.anchorX = 1;
     overlayRight.color = overlayColor;
+
+    frameLeft.onInputMove.add(this.handleFrameLeftMove, this);
+    frameRight.onInputMove.add(this.handleFrameRightMove, this);
+    frame.onInputMove.add(this.handleFrameMove, this);
+    overlayLeft.onInputMove.add(this.handleFrameLeftMove, this);
+    overlayRight.onInputMove.add(this.handleFrameRightMove, this);
 
     this.frameLeft = frameLeft;
     this.frameRight = frameRight;
@@ -63,12 +65,12 @@ export default class ScrollBar extends Graph {
 
     this.frameLeft.x = -this.width / 2;
     this.frameLeft.y = this.height / 2;
-    this.frameLeft.width = 16;
+    this.frameLeft.width = 20;
     this.frameLeft.height = this.height;
 
     this.frameRight.x = this.width / 2;
     this.frameRight.y = this.height / 2;
-    this.frameRight.width = 16;
+    this.frameRight.width = 20;
     this.frameRight.height = this.height;
 
     this.frame.y = this.height / 2;

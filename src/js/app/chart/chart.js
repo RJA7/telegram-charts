@@ -103,9 +103,9 @@ export default class Chart extends Graph {
     this.diagram.height = -LP(390, 400);
 
     this.scrollBar.x = this.diagram.x + this.width / 2;
-    this.scrollBar.y = LP(168, 180);
+    this.scrollBar.y = LP(162, 180);
     this.scrollBar.width = this.width;
-    this.scrollBar.height = 80;
+    this.scrollBar.height = 90;
 
     this.axisY.width = this.width * this.scaleX;
   }

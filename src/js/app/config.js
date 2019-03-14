@@ -69,10 +69,10 @@ export default {
 
   modeTextStyle: {size: 26, family: family.HELVETICA, fill: 'rgb(24,145,255)'},
   axisTextStyle: {size: 18, family: family.HELVETICA},
-  buttonTextStyle: {size: 28, family: family.HELVETICA},
+  buttonTextStyle: {size: 30, family: family.HELVETICA},
 
   title: 'Statistics',
-  titleTextStyle: {weight: 'bold', size: 36, family: family.HELVETICA},
+  titleTextStyle: {weight: 'bold', size: 38, family: family.HELVETICA},
 
   chartNameStyle: {family: family.HELVETICA},
 
