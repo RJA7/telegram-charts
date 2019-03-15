@@ -11,7 +11,7 @@ export default class Input {
     this.y = 0;
     this.isDown = false;
     this.isUp = true;
-    this._fired = false;
+    this._inputType = ''; // touch or mouse
     this.ticksAfterLastInput = 0;
 
     this.onDown = new Signal();
@@ -20,7 +20,6 @@ export default class Input {
 
     [
       {down: 'mousedown', up: 'mouseup', move: 'mousemove'},
-      // {down: 'vmousedown', up: 'vmouseup', move: 'vmousemove'},
       {down: 'touchstart', up: 'touchend', move: 'touchmove'},
     ].forEach(({down, up, move}) => {
       window.addEventListener(down, this.handleMouseDown.bind(this));
@@ -29,13 +28,20 @@ export default class Input {
     });
   }
 
+  handleResize() {
+    this._inputType = '';
+    this.ticksAfterLastInput = 0;
+  }
+
   add(graph) {
     this.graphs.push(graph);
   }
 
   handleMouseDown(e) {
-    if (this._fired || this.ticksAfterLastInput < 2) return;
-    this._fired = true;
+    const inputType = e.touches && e.touches[0] ? 'touch' : 'mouse';
+    this._inputType = this._inputType ? this._inputType : inputType;
+
+    if (inputType !== this._inputType) return;
 
     const touch = e.touches && e.touches[0] || e;
     const {graphs, engine: {viewPort}} = this;
@@ -60,8 +66,7 @@ export default class Input {
   }
 
   handleMouseUp() {
-    if (this._fired) return;
-    this._fired = true;
+    if (!this.isDown) return;
 
     this.isDown = false;
     this.isUp = true;
@@ -71,6 +76,10 @@ export default class Input {
   }
 
   handleMouseMove(e) {
+    const inputType = e.touches && e.touches[0] ? 'touch' : 'mouse';
+
+    if (inputType !== this._inputType) return;
+
     const touch = e.touches && e.touches[0] || e;
     const {viewPort} = this.engine;
     const x = (touch.clientX - viewPort.x) * viewPort.scale;
@@ -87,7 +96,6 @@ export default class Input {
   }
 
   update() {
-    this._fired = false;
     this.ticksAfterLastInput = this.isDown ? 0 : this.ticksAfterLastInput + 1;
   }
 }

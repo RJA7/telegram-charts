@@ -72,7 +72,7 @@ export default class Info extends Graph {
     }
 
     const date = new Date(localX);
-    const textsWidth = countTexts.length * 80 - 10;
+    const textsWidth = countTexts.length * 80;
     let tx = Math.max(global.x + 186, Math.min(global.x + parent.width - textsWidth, x + 20));
     const ty = global.y + parent.height - 14;
 
@@ -100,9 +100,9 @@ export default class Info extends Graph {
     ctx.textAlign = 'right';
     ctx.fillStyle = `rgba(${textColor.r},${textColor.g},${textColor.b},${alpha})`;
     ctx.font = `bold 22px ${config.family.HELVETICA}`;
-    ctx.fillText(`${config.days[date.getDay()]}, ${config.months[date.getMonth()]} ${date.getDate()}`, tx - 40, ty);
+    ctx.fillText(`${config.days[date.getUTCDay()]}, ${config.months[date.getUTCMonth()]} ${date.getUTCDate()}`, tx - 40, ty);
     ctx.font = `bold 20px ${config.family.HELVETICA}`;
-    ctx.fillText(`${date.getFullYear()}`, tx - 40, ty + 25);
+    ctx.fillText(`${date.getUTCFullYear()}`, tx - 40, ty + 25);
     ctx.textAlign = 'left';
 
     for (let i = 0, l = countTexts.length; i < l; i++) {

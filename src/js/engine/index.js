@@ -69,7 +69,7 @@ export default class Engine {
     this.viewPort.scale = scale;
 
     this.stage.handleResize(this.view.width, this.view.height);
-    this.input.ticksAfterLastInput = 0;
+    this.input.handleResize();
   }
 }
 

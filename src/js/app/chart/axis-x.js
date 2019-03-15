@@ -22,7 +22,7 @@ export default class AxisX extends Graph {
     const {parent, xs, texts, alphas} = this;
     xs.length = texts.length = alphas.length = 0;
 
-    const reserve = Math.ceil((parent.range.maxX - parent.range.minX) / dayMs / 5) + 0.5;
+    const reserve = Math.ceil((parent.range.maxX - parent.range.minX) / dayMs / 5);
     const startX = (Math.floor(parent.range.minX / dayMs) - reserve) * dayMs;
     const endX = (Math.ceil(parent.range.maxX / dayMs) + reserve) * dayMs;
 
@@ -31,7 +31,7 @@ export default class AxisX extends Graph {
     for (let x = startX; x <= endX; x += dayMs) {
       const date = new Date(x);
       xs.push(x);
-      texts.push(`${date.getDate()} ${config.months[date.getMonth()]}`);
+      texts.push(`${date.getUTCDate()} ${config.months[date.getUTCMonth()]}`);
       alphas.push(0);
     }
   }
