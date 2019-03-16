@@ -57,37 +57,41 @@ export default class ScrollBar extends Graph {
   }
 
   setData(data) {
-    this.diagram.x = -this.width / 2;
-    this.diagram.y = this.height - 10;
-    this.diagram.width = this.width;
-    this.diagram.height = -(this.height - 30);
-    this.diagram.setData(data);
+    const {diagram, frameLeft, frameRight, frame, overlayLeft, overlayRight, width, height} = this;
 
-    this.frameLeft.x = -this.width / 2;
-    this.frameLeft.y = this.height / 2;
-    this.frameLeft.width = 20;
-    this.frameLeft.height = this.height;
+    diagram.x = -width / 2;
+    diagram.y = height - 10;
+    diagram.width = width;
+    diagram.height = -(height - 30);
+    diagram.setData(data);
 
-    this.frameRight.x = this.width / 2;
-    this.frameRight.y = this.height / 2;
-    this.frameRight.width = 20;
-    this.frameRight.height = this.height;
+    frameLeft.x = -width / 2;
+    frameLeft.y = height / 2;
+    frameLeft.width = 20;
+    frameLeft.height = height;
 
-    this.frame.y = this.height / 2;
-    this.frame.height = this.height;
+    frameRight.x = width / 2;
+    frameRight.y = height / 2;
+    frameRight.width = 20;
+    frameRight.height = height;
 
-    this.overlayLeft.x = -this.width / 2 - 1;
-    this.overlayLeft.height = this.height;
-    this.overlayRight.x = this.width / 2 + 1;
-    this.overlayRight.height = this.height;
+    frame.y = height / 2;
+    frame.height = height;
+
+    overlayLeft.x = -width / 2 - 1;
+    overlayLeft.height = height;
+    overlayRight.x = width / 2 + 1;
+    overlayRight.height = height;
 
     this.syncFrame(true);
   }
 
   handleModeChange(mode, time = 0.3) {
-    this.frameColorTween.set(config[mode].scrollBar.frame, time).start();
-    this.overlayColorTween.set(config[mode].scrollBar.overlay, time).start();
-    this.bgColorTween.set(config[mode].scrollBar.bg, time).start();
+    const {frameColorTween, overlayColorTween, bgColorTween} = this;
+    const {frame, overlay, bg} = config[mode].scrollBar;
+    frameColorTween.set(frame, time).start();
+    overlayColorTween.set(overlay, time).start();
+    bgColorTween.set(bg, time).start();
   }
 
   handleFrameLeftMove() {
@@ -126,19 +130,19 @@ export default class ScrollBar extends Graph {
   }
 
   syncFrame(silent = false) {
-    const {frameLeft, frameRight, frame, overlayLeft, overlayRight, width} = this;
+    const {frameLeft, frameRight, frame, overlayLeft, overlayRight, width, onCropChange} = this;
 
     frame.x = (frameLeft.x + frameRight.x) / 2;
     frame.width = frameRight.x - frameLeft.x;
     overlayLeft.width = Math.max(0, frameLeft.x - overlayLeft.x - frameLeft.width);
     overlayRight.width = Math.max(0, overlayRight.x - frameRight.x - frameRight.width);
 
-    !silent && this.onCropChange.dispatch(0.5 + frameLeft.x / width, 0.5 + frameRight.x / width);
+    !silent && onCropChange.dispatch(0.5 + frameLeft.x / width, 0.5 + frameRight.x / width);
   }
 
   render(ctx) {
-    const {global, bgColor} = this;
+    const {global, bgColor, width} = this;
     ctx.fillStyle = `rgb(${bgColor.r},${bgColor.g},${bgColor.b})`;
-    ctx.fillRect(global.x - this.width / 2, global.y, global.width, global.height);
+    ctx.fillRect(global.x - width / 2, global.y, global.width, global.height);
   }
 }

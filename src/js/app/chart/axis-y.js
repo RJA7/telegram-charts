@@ -85,10 +85,12 @@ export default class AxisY extends Graph {
       return '0';
     }
 
-    let j = this.shortcutIndex;
+    const {shortcutIndex} = this;
+
+    let j = shortcutIndex;
     while (j--) number /= 1000;
 
-    return `${number.toFixed(this.shortcutIndex === 0 ? 0 : floatDigitsCount)}${shortcuts[this.shortcutIndex]}`;
+    return `${number.toFixed(shortcutIndex === 0 ? 0 : floatDigitsCount)}${shortcuts[shortcutIndex]}`;
   }
 
   handleModeChange(mode, time = 0.3) {

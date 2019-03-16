@@ -42,16 +42,16 @@ export default class Tween {
   }
 
   update() {
-    const {keys, target, dst, src} = this;
+    const {keys, target, dst, src, onUpdate, ease, ticks} = this;
     this.ticksLeft--;
-    const k = this.ease(1 - this.ticksLeft / this.ticks);
+    const k = ease(1 - this.ticksLeft / ticks);
 
     for (let i = 0, l = keys.length; i < l; i++) {
       const key = keys[i];
       target[key] = src[key] + (dst[key] - src[key]) * k;
     }
 
-    this.onUpdate.dispatch(k);
+    onUpdate.dispatch(k);
   }
 }
 

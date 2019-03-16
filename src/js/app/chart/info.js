@@ -92,9 +92,16 @@ export default class Info extends Graph {
       ctx.arcTo(left, top, right, top, radius);
       ctx.fillStyle = `rgba(${boxFill.r},${boxFill.g},${boxFill.b},${alpha})`;
       ctx.strokeStyle = `rgba(${boxStroke.r},${boxStroke.g},${boxStroke.b},${alpha * boxStroke.a})`;
-      ctx.lineWidth = 3;
+      ctx.shadowColor = `rgba(${boxStroke.r},${boxStroke.g},${boxStroke.b},${alpha * boxStroke.a})`;
+      ctx.shadowBlur = 20;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
       ctx.stroke();
       ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
     }
 
     ctx.textAlign = 'right';

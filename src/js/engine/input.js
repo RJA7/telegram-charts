@@ -61,17 +61,19 @@ export default class Input {
     this.x = x;
     this.y = y;
 
-    (!this.downGraph || !this.downGraph.stopGlobalInput) && this.onDown.dispatch();
-    this.downGraph && this.downGraph.onInputDown.dispatch();
+    const {downGraph, onDown} = this;
+    (!downGraph || !downGraph.stopGlobalInput) && onDown.dispatch();
+    downGraph && downGraph.onInputDown.dispatch();
   }
 
   handleMouseUp() {
     if (!this.isDown) return;
 
+    const {downGraph, onUp} = this;
     this.isDown = false;
     this.isUp = true;
-    (!this.downGraph || !this.downGraph.stopGlobalInput) && this.onUp.dispatch();
-    this.downGraph && this.downGraph.onInputUp.dispatch();
+    (!downGraph || !downGraph.stopGlobalInput) && onUp.dispatch();
+    downGraph && downGraph.onInputUp.dispatch();
     this.downGraph = null;
   }
 
@@ -91,8 +93,9 @@ export default class Input {
     this.x = x;
     this.y = y;
 
-    (!this.downGraph || !this.downGraph.stopGlobalInput) && this.onMove.dispatch();
-    this.downGraph && this.downGraph.onInputMove.dispatch();
+    const {downGraph, onMove} = this;
+    (!downGraph || !downGraph.stopGlobalInput) && onMove.dispatch();
+    downGraph && downGraph.onInputMove.dispatch();
   }
 
   update() {

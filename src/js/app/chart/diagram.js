@@ -134,25 +134,28 @@ export default class Diagram extends Graph {
   }
 
   rangeYChange() {
-    this.scaleTween.set({
-      scaleY: this.height / (this.range.maxY - this.range.minY),
-      rangeMinY: this.range.minY,
+    const {scaleTween, range: {minY, maxY}, onRangeYChange, height} = this;
+
+    scaleTween.set({
+      scaleY: height / (maxY - minY),
+      rangeMinY: minY,
     }, 0.1, Tween.sin.out).start();
 
-    this.onRangeYChange.dispatch();
+    onRangeYChange.dispatch();
   }
 
   setCrop(startPercentX, endPercentX) {
-    const {startPercentX: sx, endPercentX: ex} = this.crop;
-    this.crop.startPercentX = startPercentX;
-    this.crop.endPercentX = endPercentX;
+    const {crop, cropTween} = this;
+    const {startPercentX: sx, endPercentX: ex} = crop;
+    crop.startPercentX = startPercentX;
+    crop.endPercentX = endPercentX;
 
     this.updateCrop();
     this.refreshRangeY();
 
-    this.crop.startPercentX = sx;
-    this.crop.endPercentX = ex;
-    this.cropTween.set({startPercentX, endPercentX}, 0.2, Tween.sin.out).start();
+    crop.startPercentX = sx;
+    crop.endPercentX = ex;
+    cropTween.set({startPercentX, endPercentX}, 0.2, Tween.sin.out).start();
   }
 
   updateCrop() {

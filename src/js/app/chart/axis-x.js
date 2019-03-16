@@ -19,12 +19,12 @@ export default class AxisX extends Graph {
   }
 
   reset() {
-    const {parent, xs, texts, alphas} = this;
+    const {parent: {range: {minX, maxX}}, xs, texts, alphas} = this;
     xs.length = texts.length = alphas.length = 0;
 
-    const reserve = Math.ceil((parent.range.maxX - parent.range.minX) / dayMs / 5);
-    const startX = (Math.floor(parent.range.minX / dayMs) - reserve) * dayMs;
-    const endX = (Math.ceil(parent.range.maxX / dayMs) + reserve) * dayMs;
+    const reserve = Math.ceil((maxX - minX) / dayMs / 5);
+    const startX = (Math.floor(minX / dayMs) - reserve) * dayMs;
+    const endX = (Math.ceil(maxX / dayMs) + reserve) * dayMs;
 
     this.fullWidth = endX - startX;
 

@@ -40,20 +40,23 @@ class App extends Graph {
   }
 
   handleModeTextClick(time) {
-    this.mode = this.mode === config.mode.DAY ? config.mode.NIGHT : config.mode.DAY;
-    this.bg.handleModeChange(this.mode, time);
-    this.modeText.handleModeChange(this.mode, time);
-    this.tapAnim.handleModeChange(this.mode, time);
-    this.chart.handleModeChange(this.mode, time);
-    this.header.handleModeChange(this.mode, time);
+    const {bg, modeText, tapAnim, chart, header, mode: m} = this;
+    const mode = m === config.mode.DAY ? config.mode.NIGHT : config.mode.DAY;
+    this.mode = mode;
+    bg.handleModeChange(mode, time);
+    modeText.handleModeChange(mode, time);
+    tapAnim.handleModeChange(mode, time);
+    chart.handleModeChange(mode, time);
+    header.handleModeChange(mode, time);
   }
 
   handleBgInputMove() {
     if (this.isChartTween) return;
 
-    this.chart.x += this.engine.input.dx;
-    this.chart.alpha = Math.max(0, 1 - Math.abs(this.engine.view.width / 2 - this.chart.x) / 100);
-    this.chart.alpha === 0 && this.changeData(this.engine.input.dx > 0 ? -1 : 1);
+    const {chart, engine} = this;
+    chart.x += engine.input.dx;
+    chart.alpha = Math.max(0, 1 - Math.abs(engine.view.width / 2 - chart.x) / 100);
+    chart.alpha === 0 && this.changeData(engine.input.dx > 0 ? -1 : 1);
   }
 
   handleBgInputUp() {
@@ -62,27 +65,29 @@ class App extends Graph {
   }
 
   changeData(sign) {
+    const {chart, engine, chartTween, mode} = this;
     this.dataIndex = (this.dataIndex + chartData.length + sign) % chartData.length;
-    this.chart.setData(chartData[this.dataIndex], this.mode);
+    chart.setData(chartData[this.dataIndex], mode);
 
-    const centerX = this.engine.view.width / 2;
-    this.chart.x = centerX + sign * 400;
+    const centerX = engine.view.width / 2;
+    chart.x = centerX + sign * 400;
+    chartTween.set({x: centerX, alpha: 1}, 0.2, Tween.sin.out).start();
     this.isChartTween = true;
-    this.chartTween.set({x: centerX, alpha: 1}, 0.2, Tween.sin.out).start();
   }
 
   handleResize(width, height) {
-    this.chart.y = height / 2 + LP(60, 20);
+    const {chart, modeText, chartTween} = this;
+    chart.y = height / 2 + LP(60, 20);
 
-    if (this.chartTween.ticksLeft > 0) {
-      this.chartTween.dst.x = width / 2;
+    if (chartTween.ticksLeft > 0) {
+      chartTween.dst.x = width / 2;
     } else {
-      this.chart.x = width / 2;
+      chart.x = width / 2;
     }
 
     super.handleResize(width, height);
-    this.modeText.x = LP(this.chart.nameText.x + width / 2, width / 2 - this.modeText.width / 2);
-    this.modeText.y = LP(this.chart.y + 270, height - 16);
+    modeText.x = LP(chart.nameText.x + width / 2, width / 2 - modeText.width / 2);
+    modeText.y = LP(chart.y + 270, height - 16);
   }
 
   update() {

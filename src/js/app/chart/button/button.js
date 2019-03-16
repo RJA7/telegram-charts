@@ -31,11 +31,14 @@ export default class Button extends Graph {
   }
 
   handleModeChange(mode, time = 0.3) {
-    this.strokeColorTween.set(config[mode].button.stroke, time).start();
-    this.fillColorTween.set(config[mode].button.fill, time).start();
-    this.textColorTween.set(config[mode].button.text, time).start();
+    const {strokeColorTween, fillColorTween, textColorTween, tick} = this;
+    const {stroke, fill, text} = config[mode].button;
 
-    this.tick.handleModeChange(mode);
+    strokeColorTween.set(stroke, time).start();
+    fillColorTween.set(fill, time).start();
+    textColorTween.set(text, time).start();
+
+    tick.handleModeChange(mode);
   }
 
   toggleActive() {
@@ -44,7 +47,7 @@ export default class Button extends Graph {
   }
 
   render(ctx) {
-    const {global: {x, y, width, height}, fillColor, strokeColor, textColor, tick} = this;
+    const {global: {x, y, width, height}, fillColor, strokeColor, textColor, tick, name} = this;
     const style = config.buttonTextStyle;
     const hh = height / 2;
 
@@ -61,7 +64,7 @@ export default class Button extends Graph {
 
     if (tick.animPercent !== 0) {
       const animColor = tick.animColor;
-      const a = (1 - this.animPercent * this.animPercent) * animColor.a * 0.8;
+      const a = (1 - tick.animPercent * tick.animPercent) * animColor.a * 0.8;
 
       ctx.save();
       ctx.clip();
@@ -78,6 +81,6 @@ export default class Button extends Graph {
     ctx.textAlign = 'left';
     ctx.fillStyle = `rgb(${textColor.r},${textColor.g},${textColor.b})`;
     ctx.font = `${style.size}px ${style.family}`;
-    ctx.fillText(this.name, x + 70, y + hh + style.size * 0.38);
+    ctx.fillText(name, x + 70, y + hh + style.size * 0.38);
   }
 }

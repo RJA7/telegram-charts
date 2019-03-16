@@ -100,17 +100,19 @@ export default class Graph {
   }
 
   destroy() {
-    if (this.parent) {
-      const index = this.parent.children.indexOf(this);
-      index !== -1 && this.parent.children.splice(index, 1);
+    const {engine: {input: {graphs}}, parent: {children}, parent, onInputDown, onInputUp, onInputMove} = this;
+
+    if (parent) {
+      const index = children.indexOf(this);
+      index !== -1 && children.splice(index, 1);
     }
 
-    const index = this.engine.input.graphs.indexOf(this);
-    index !== -1 && this.engine.input.graphs.splice(index, 1);
+    const index = graphs.indexOf(this);
+    index !== -1 && graphs.splice(index, 1);
 
-    this.onInputDown.removeAll();
-    this.onInputUp.removeAll();
-    this.onInputMove.removeAll();
+    onInputDown.removeAll();
+    onInputUp.removeAll();
+    onInputMove.removeAll();
 
     this.engine = null;
     this.parent = null;

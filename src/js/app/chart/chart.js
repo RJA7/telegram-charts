@@ -41,23 +41,25 @@ export default class Chart extends Graph {
   }
 
   handleModeChange(mode, time) {
-    this.axisX.handleModeChange(mode, time);
-    this.axisY.handleModeChange(mode, time);
-    this.scrollBar.handleModeChange(mode, time);
-    this.nameText.handleModeChange(mode, time);
-    this.info.handleModeChange(mode);
-    this.buttons.forEach(button => button.handleModeChange(mode, time));
+    const {axisX, axisY, scrollBar, nameText, info, buttons} = this;
+    axisX.handleModeChange(mode, time);
+    axisY.handleModeChange(mode, time);
+    scrollBar.handleModeChange(mode, time);
+    nameText.handleModeChange(mode, time);
+    info.handleModeChange(mode);
+    buttons.forEach(button => button.handleModeChange(mode, time));
   }
 
   handleButtonClick(button) {
+    const {diagram, scrollBar, topButton, children} = this;
     button.toggleActive();
-    this.diagram.setColVisibility(button.colId, button.isActive);
-    this.scrollBar.diagram.setColVisibility(button.colId, button.isActive);
+    diagram.setColVisibility(button.colId, button.isActive);
+    scrollBar.diagram.setColVisibility(button.colId, button.isActive);
 
-    if (button !== this.topButton) {
-      const index = this.children.indexOf(button);
-      this.children.splice(this.children.indexOf(this.topButton), 1, button);
-      this.children.splice(index, 1, this.topButton);
+    if (button !== topButton) {
+      const index = children.indexOf(button);
+      children.splice(children.indexOf(topButton), 1, button);
+      children.splice(index, 1, topButton);
       this.topButton = button;
     }
   }
@@ -65,57 +67,63 @@ export default class Chart extends Graph {
   handleResize(width, height) {
     super.handleResize(width, height);
 
+    const {buttons, nameText, diagram, scrollBar, axisY, width: thisWidth} = this;
+
     const offset = LP(20, 10);
     let totalWidth = 0;
     let totalHeight = 0;
     let maxBtnWidth = 0;
 
-    for (let i = 0, l = this.buttons.length; i < l; i++) {
-      totalWidth += this.buttons[i].width + offset;
-      totalHeight += this.buttons[i].height + offset;
-      maxBtnWidth = Math.max(maxBtnWidth, this.buttons[i].width);
+    for (let i = 0, l = buttons.length; i < l; i++) {
+      const button = buttons[i];
+      totalWidth += button.width + offset;
+      totalHeight += button.height + offset;
+      maxBtnWidth = Math.max(maxBtnWidth, button.width);
     }
 
 
     if (LP(true, false)) {
-      this.nameText.x = (this.width - maxBtnWidth) / 2 + 26;
-      this.nameText.y = -totalHeight / 2 - 74;
+      nameText.x = (thisWidth - maxBtnWidth) / 2 + 26;
+      nameText.y = -totalHeight / 2 - 74;
 
-      for (let i = 0, l = this.buttons.length, prevBottom = this.nameText.y + 14; i < l; i++) {
-        this.buttons[i].x = this.nameText.x - 6;
-        this.buttons[i].y = prevBottom + offset;
-        prevBottom = this.buttons[i].y + this.buttons[i].height;
+      for (let i = 0, l = buttons.length, prevBottom = nameText.y + 14; i < l; i++) {
+        const button = buttons[i];
+        button.x = nameText.x - 6;
+        button.y = prevBottom + offset;
+        prevBottom = button.y + button.height;
       }
     } else {
-      this.nameText.x = -this.nameText.width / 2;
-      this.nameText.y = -340;
+      nameText.x = -nameText.width / 2;
+      nameText.y = -340;
 
-      for (let i = 0, l = this.buttons.length, prevRight = -totalWidth * 0.5 - 4; i < l; i++) {
-        this.buttons[i].x = prevRight + offset;
-        this.buttons[i].y = 300;
-        prevRight = this.buttons[i].x + this.buttons[i].width;
+      for (let i = 0, l = buttons.length, prevRight = -totalWidth * 0.5 - 4; i < l; i++) {
+        const button = buttons[i];
+        button.x = prevRight + offset;
+        button.y = 300;
+        prevRight = button.x + button.width;
       }
     }
 
-    this.diagram.x = -this.width / 2 + LP(-maxBtnWidth / 2 - 20, 0);
-    this.diagram.y = 120;
-    this.diagram.width = this.width;
-    this.diagram.height = -LP(390, 400);
+    diagram.x = -thisWidth / 2 + LP(-maxBtnWidth / 2 - 20, 0);
+    diagram.y = 120;
+    diagram.width = thisWidth;
+    diagram.height = -LP(390, 400);
 
-    this.scrollBar.x = this.diagram.x + this.width / 2;
-    this.scrollBar.y = LP(162, 180);
-    this.scrollBar.width = this.width;
-    this.scrollBar.height = 90;
+    scrollBar.x = diagram.x + thisWidth / 2;
+    scrollBar.y = LP(162, 180);
+    scrollBar.width = thisWidth;
+    scrollBar.height = 90;
 
-    this.axisY.width = this.width * this.scaleX;
+    axisY.width = thisWidth * this.scaleX;
   }
 
   setData(data, mode) {
-    this.scrollBar.setData(data);
-    this.diagram.setData(data);
-    this.nameText.setData(data);
-    this.axisX.reset();
-    this.axisY.reset();
+    const {scrollBar, diagram, nameText, axisX, axisY} = this;
+    scrollBar.setData(data);
+    diagram.setData(data);
+    nameText.setData(data);
+    axisX.reset();
+    axisY.reset();
 
     const {buttons, engine} = this;
 
@@ -139,7 +147,7 @@ export default class Chart extends Graph {
     }
 
     this.topButton = buttons[buttons.length - 1];
-    this.handleResize(this.engine.view.width, this.engine.view.height);
+    this.handleResize(engine.view.width, engine.view.height);
   }
 
   _render(ctx, x, y, scaleX, scaleY) {

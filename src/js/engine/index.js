@@ -29,11 +29,12 @@ export default class Engine {
 
   tick() {
     requestAnimationFrame(this.tick);
-    this.input.update();
 
-    if (this.input.ticksAfterLastInput > 30 && this.tweens.length === 0) return;
+    const {stage, tweens, input, ctx} = this;
+    input.update();
 
-    const {stage, tweens} = this;
+    if (input.ticksAfterLastInput > 30 && tweens.length === 0) return;
+
     // ctx.clearRect(0, 0, view.width, view.height);
 
     let i = tweens.length;
@@ -48,8 +49,7 @@ export default class Engine {
     }
 
     stage._update();
-    stage._render(this.ctx, 0, 0, 1, 1, 1);
-
+    stage._render(ctx, 0, 0, 1, 1, 1);
   }
 
   handleResize(width = window.innerWidth, height = window.innerHeight) {
@@ -59,17 +59,19 @@ export default class Engine {
     const mh = LP(height * 960 / width, height * 640 / width);
     const scale = Math.max(mw / width, mh / height);
 
-    this.view.width = Math.ceil(width * scale);
-    this.view.height = Math.ceil(height * scale);
-    this.view.style.width = `${width}px`;
-    this.view.style.height = `${height}px`;
+    const {view, viewPort, stage, input} = this;
 
-    this.viewPort.x = 0;
-    this.viewPort.y = 0;
-    this.viewPort.scale = scale;
+    view.width = Math.ceil(width * scale);
+    view.height = Math.ceil(height * scale);
+    view.style.width = `${width}px`;
+    view.style.height = `${height}px`;
 
-    this.stage.handleResize(this.view.width, this.view.height);
-    this.input.handleResize();
+    viewPort.x = 0;
+    viewPort.y = 0;
+    viewPort.scale = scale;
+
+    stage.handleResize(view.width, view.height);
+    input.handleResize();
   }
 }
 
