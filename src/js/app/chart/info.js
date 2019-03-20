@@ -94,14 +94,10 @@ export default class Info extends Graph {
       ctx.strokeStyle = `rgba(${boxStroke.r},${boxStroke.g},${boxStroke.b},${alpha * boxStroke.a})`;
       ctx.shadowColor = `rgba(${boxStroke.r},${boxStroke.g},${boxStroke.b},${alpha * boxStroke.a})`;
       ctx.shadowBlur = 20;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
       ctx.stroke();
       ctx.fill();
 
       ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
     }
 
     ctx.textAlign = 'right';

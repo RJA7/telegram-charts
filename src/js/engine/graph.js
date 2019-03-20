@@ -46,20 +46,23 @@ export default class Graph {
       this.cache.ctx = this.cache.canvas.getContext('2d');
     }
 
-    const {size = 24, family = 'Arial', fill = '', stroke = '', lineWidth = 0, lineSpacing = 1.5} = style;
+    const {size = 24, family = 'Arial', fill = '', stroke = '', lineWidth = 0, lineSpacing = 1.5, align = 'left'} = style;
     const {cache: {canvas, ctx}} = this;
     const halfStroke = lineWidth / 2;
 
     const lines = text.split('\n');
+    const widths = [];
     this.width = 0;
 
-    for (let i = 0, l = lines.length; i < l; i++) {
-      this.width = Math.max(this.width, this.measureText(text, style, this).width);
+    for (let i = 0, l = lines.length, out = {}; i < l; i++) {
+      this.measureText(lines[i], style, out);
+      this.width = Math.max(this.width, out.width);
+      widths[i] = out.width;
     }
 
-    const lineHeight = this.height;
+    const lineHeight = size + lineWidth;
     canvas.width = this.width;
-    canvas.height = this.height = lineHeight * lines.length + lineSpacing * lineHeight * (lines.length - 1);
+    canvas.height = this.height = lineSpacing * lineHeight * (lines.length - 1) + lineHeight;
 
     ctx.font = `${size}px ${family}`;
     ctx.textBaseline = 'top';
@@ -75,12 +78,15 @@ export default class Graph {
     }
 
     for (let i = 0, l = lines.length, offset = lineHeight * lineSpacing; i < l; i++) {
-      if (fill !== '') {
-        ctx.fillText(lines[i], halfStroke, halfStroke + offset * i);
-      }
+      const x = halfStroke + (align === 'left' ? 0 : align === 'center' ? (this.width - widths[i]) * 0.5 : this.width - widths[i]);
+      const y = halfStroke + offset * i;
 
       if (lineWidth > 0) {
-        ctx.strokeText(lines[i], halfStroke, halfStroke + offset * i);
+        ctx.strokeText(lines[i], x, y);
+      }
+
+      if (fill !== '') {
+        ctx.fillText(lines[i], x, y);
       }
     }
   }
@@ -100,16 +106,14 @@ export default class Graph {
   }
 
   destroy() {
-    const {engine: {input: {graphs}}, parent: {children}, parent, onInputDown, onInputUp, onInputMove} = this;
+    const {engine: {input}, parent: {children}, parent, onInputDown, onInputUp, onInputMove} = this;
 
     if (parent) {
       const index = children.indexOf(this);
       index !== -1 && children.splice(index, 1);
     }
 
-    const index = graphs.indexOf(this);
-    index !== -1 && graphs.splice(index, 1);
-
+    input.remove(this);
     onInputDown.removeAll();
     onInputUp.removeAll();
     onInputMove.removeAll();

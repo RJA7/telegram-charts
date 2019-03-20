@@ -6,6 +6,7 @@ import chartData from '../../chart_data';
 import Chart from './chart/chart';
 import TapAnim from './tap-anim';
 import Header from './header';
+import Tutorial from './tutorial';
 
 chartData.forEach((data, i) => data.name = `Chart #${i + 1}`);
 
@@ -18,6 +19,7 @@ class App extends Graph {
     const chart = new Chart(engine, this);
     const tapAnim = new TapAnim(engine, this);
     const header = new Header(engine, this);
+    new Tutorial(engine, this);
 
     this.bg = bg;
     this.modeText = modeText;
@@ -87,7 +89,7 @@ class App extends Graph {
 
     super.handleResize(width, height);
     modeText.x = LP(chart.nameText.x + width / 2, width / 2 - modeText.width / 2);
-    modeText.y = LP(chart.y + 270, height - 16);
+    modeText.y = LP(chart.y + 245, height - 16);
   }
 
   update() {

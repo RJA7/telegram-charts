@@ -37,6 +37,11 @@ export default class Input {
     this.graphs.push(graph);
   }
 
+  remove(graph) {
+    const index = this.graphs.indexOf(graph);
+    index !== -1 && this.graphs.splice(index, 1);
+  }
+
   handleMouseDown(e) {
     const inputType = e.touches && e.touches[0] ? 'touch' : 'mouse';
     this._inputType = this._inputType ? this._inputType : inputType;
