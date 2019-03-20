@@ -36,7 +36,14 @@ export default class AxisY extends Graph {
     risingSprites.length = 0;
 
     this.shortcutIndex = this.getShortcutIndex(minY + step);
-    this.floatDigitsCount = this.getFloatDigitsCount(parseFloat(this.applyShortcut(minY + step, this.shortcutIndex, 2)));
+    this.floatDigitsCount = 0;
+
+    let y = minY;
+    while (y < maxY) {
+      const n = parseFloat(this.applyShortcut(y, this.shortcutIndex, 2));
+      this.floatDigitsCount = Math.max(this.floatDigitsCount, this.getFloatDigitsCount(n));
+      y += step;
+    }
 
     for (let i = 0; i <= stepsY; i++) {
       const y = minY + step * i;
