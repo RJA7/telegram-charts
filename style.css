@@ -1,0 +1,59 @@
+.side-day {
+    background-color: black;
+    cursor: grab;
+    transition: all 0.1s ease;
+}
+
+.frame {
+    border: 5px solid black;
+    cursor: grab;
+    transition: all 0.1s ease;
+}
+
+.axis-line {
+    background-color: black;
+    vertical-align: text-bottom;
+    transition: all 0.1s ease;
+}
+
+.axis-x {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: opacity 0.1s ease;
+}
+
+.button {
+    border-radius: 30px;
+    padding: 10px 16px;
+    font-weight: bold;
+    font-size: 18px;
+    float: left;
+    cursor: pointer;
+}
+
+.tween {
+    transition: all 0.2s ease;
+}
+
+.info-line {
+    background-color: black;
+}
+
+.info-bg {
+    background-color: aliceblue;
+    border-radius: 20px;
+    border: 2px solid black;
+}
+
+.title {
+    font-weight: bold;
+}
+
+.zoom {
+    color: blue;
+}
+
+.range-text {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
