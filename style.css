@@ -1,28 +1,33 @@
 .side-day {
-    background-color: black;
+    background-color: #C0D1E1;
     cursor: grab;
     transition: all 0.1s ease-out;
 }
 
 .frame {
-    border: 5px solid black;
+    border: 3px solid #C0D1E1;
     cursor: grab;
     transition: all 0.1s ease-out;
 }
 
 .axis-line {
-    background-color: black;
+    background-color: rgba(24,45,59,0.1);
     vertical-align: text-bottom;
-    transition: all 0.1s ease-out;
+    transition: bottom 0.1s ease-out;
 }
 
 .axis-x {
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: rgba(37,37,41,0.5);
+}
+
+.axis-y {
+    color: rgba(37,37,41,0.5);
 }
 
 .tw {
-    transition: opacity, left, bottom 0.2s ease-out;
+    transition: all 0.1s ease-out;
 }
 
 .tw-o {
@@ -74,7 +79,7 @@
 }
 
 .zoom {
-    color: blue;
+    color: #108BE3;
 }
 
 .range-text {

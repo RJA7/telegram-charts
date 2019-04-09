@@ -42,6 +42,7 @@
 
   info = app.Info(chart, diagram, scrollBar, onDatMode);
 
+  onDayMode();
   onOverMode();
 
   function onButtonClick() {
@@ -52,6 +53,11 @@
   function onRangeChange() {
     header.setRange(scrollBar.leftIndex, scrollBar.rightIndex);
     diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX, axesY);
+  }
+
+  function onDayMode() {
+    diagram.bgColor = '#ffffff';
+    scrollBar.diagram.bgColor = 'rgba(226,238,249,0.6)';
   }
 
   function onOverMode() {

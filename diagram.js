@@ -42,6 +42,7 @@
   return {
     canvas: canvas,
     view: view,
+    bgColor: '',
 
     setOver: function (overview) {
       reset(overview);
@@ -69,7 +70,7 @@
         }
       }
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = this.bgColor;
       ctx.fillRect(0, 0, width, height);
 
       if (minimalY === Number.MAX_VALUE) return;

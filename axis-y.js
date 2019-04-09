@@ -5,7 +5,7 @@
 
   for (i = 0; i < length; i++) {
     text = new app.E('div');
-    text.sC('axis-y-text');
+    text.sC('axis-y');
     text.sC('tween');
     parent.add(text);
     texts.push(text);

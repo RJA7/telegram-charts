@@ -28,15 +28,34 @@
   rangeText.sC('range-text');
   parent.add(rangeText);
 
-  function getDateStrOver(time) {
-    var date = new Date(time);
-    return date.getUTCDate() + ' ' + app.months[date.getUTCMonth()] + ' ' + date.getUTCFullYear();
+  function getDateStrOver(leftTime, rightTime) {
+    var leftDate = new Date(leftTime);
+    var rightDate = new Date(rightTime);
+    var res = leftDate.getUTCDate() + ' ' + app.months[leftDate.getUTCMonth()] + ' ' + leftDate.getUTCFullYear();
+    var leftPlus = new Date(leftTime);
+    leftPlus.setUTCMonth(leftDate.getUTCMonth() + 1);
+
+    if (leftPlus.getTime() !== rightDate.getTime()) {
+      res += ' - ' + rightDate.getUTCDate() + ' ' + app.months[rightDate.getUTCMonth()] + ' ' + rightDate.getUTCFullYear();
+    }
+
+    return res;
   }
 
-  function getDateStrDat(time) {
-    var date = new Date(time);
-    return days[date.getUTCDay()] + ', ' + date.getUTCDate() + ' ' +
-      app.months[date.getUTCMonth()] + ' ' + date.getUTCFullYear();
+  function getDateStrDat(leftTime, rightTime) {
+    var leftDate = new Date(leftTime);
+    var rightDate = new Date(rightTime);
+    var res = days[leftDate.getUTCDay()] + ', ' + leftDate.getUTCDate() + ' ' +
+      app.months[leftDate.getUTCMonth()] + ' ' + leftDate.getUTCFullYear();
+    var leftPlus = new Date(leftTime);
+    leftPlus.setUTCDate(leftDate.getUTCDate() + 1);
+
+    if (leftPlus.getTime() !== rightDate.getTime()) {
+      res += days[rightDate.getUTCDay()] + ', ' + rightDate.getUTCDate() + ' ' +
+        app.months[rightDate.getUTCMonth()] + ' ' + rightDate.getUTCFullYear();
+    }
+
+    return res;
   }
 
   return {
@@ -57,10 +76,7 @@
     },
 
     setRange: function (leftIndex, rightIndex) {
-      var start = getDateStr(data.columns[0][leftIndex + 1]);
-      var end = getDateStr(data.columns[0][rightIndex + 1]);
-
-      rangeText.sT(start === end ? start : start + ' - ' + end);
+      rangeText.sT(getDateStr(data.columns[0][leftIndex + 1], data.columns[0][rightIndex + 1]));
       rangeText.sX(400 - rangeText.e.getBoundingClientRect().width);
     }
   }

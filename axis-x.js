@@ -65,7 +65,7 @@
       oldHash = hash;
       hash = {};
 
-      for (i = Math.ceil(leftIndex / step) * step; i < rightIndex; i += step) {
+      for (i = leftIndex; i < rightIndex; i += step) {
         var elem = oldHash[i];
 
         if (!elem) {
