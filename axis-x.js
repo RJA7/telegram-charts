@@ -12,8 +12,7 @@
     return elem;
   }
 
-  var hash = {};
-  var oldHash, colX, texts;
+  var hash = {}, oldHash, colX, texts;
 
   function clearHash() {
     for (var key in hash) {
@@ -79,7 +78,7 @@
         hash[i] = elem;
         elem.sT(texts[i]);
         elem.sX((colX[i] - minX) * sx);
-        elem.sO(1);
+        elem.o === 0 && elem.sO(1);
       }
 
       for (key in oldHash) {
