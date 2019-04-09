@@ -1,6 +1,7 @@
 ;app.AxisX = function (parent) {
   app.months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var elems = [];
+  var elemsToStartTransition = [];
 
   function createElem() {
     var elem = new app.E('div');
@@ -23,22 +24,19 @@
     hash = {};
   }
 
+  function delayCall() {
+    var e;
+    while (elemsToStartTransition.length !== 0) {
+      e = elemsToStartTransition.pop();
+      e.sC('tw');
+      e.rC('tw-o');
+    }
+  }
+
   return {
-    setCloseData: function (data) {
+    setOver: function (overview) {
       clearHash();
-      colX = data.columns[0].slice(1);
-
-      texts = colX.map(function (time) {
-        var date = new Date(time);
-        var hours = date.getUTCHours();
-        var mins = date.getUTCMinutes();
-        return (hours < 10 ? '0' : '') + hours + ':' + (mins < 10 ? '0' : '') + mins;
-      });
-    },
-
-    setStandardData: function (data) {
-      clearHash();
-      colX = data.columns[0].slice(1);
+      colX = overview.columns[0].slice(1);
 
       texts = colX.map(function (time) {
         var date = new Date(time);
@@ -46,28 +44,52 @@
       });
     },
 
-    render: function (firstIndex, lastIndex, minX, sx) {
-      var desStep = Math.ceil((lastIndex - firstIndex) / 7);
-      var step = 1;
+    setDat: function (dat) {
+      clearHash();
+      colX = dat.columns[0].slice(1);
+
+      texts = colX.map(function (time) {
+        var date = new Date(time),
+          hours = date.getUTCHours(),
+          mins = date.getUTCMinutes();
+
+        return (hours < 10 ? '0' : '') + hours + ':' + (mins < 10 ? '0' : '') + mins;
+      });
+    },
+
+    render: function (leftIndex, rightIndex, minX, sx) {
+      var desStep = Math.ceil((rightIndex - leftIndex) / 7),
+        step = 1, i, key;
+
       while (step < desStep) step *= 2;
 
       oldHash = hash;
       hash = {};
 
-      for (var i = Math.ceil(firstIndex / step) * step, n = 0; i < lastIndex; i += step, n++) {
-        var elem = oldHash[i] || elems.pop() || createElem();
+      for (i = Math.ceil(leftIndex / step) * step; i < rightIndex; i += step) {
+        var elem = oldHash[i];
+
+        if (!elem) {
+          elem = elems.pop() || createElem();
+          elem.rC('tw');
+          elem.sC('tw-o');
+          elemsToStartTransition.push(elem);
+        }
+
         hash[i] = elem;
         elem.sT(texts[i]);
         elem.sX((colX[i] - minX) * sx);
         elem.sO(1);
       }
 
-      for (var key in oldHash) {
+      for (key in oldHash) {
         if (!hash[key]) {
           elems.push(oldHash[key]);
           oldHash[key].sO(0);
         }
       }
+
+      setTimeout(delayCall, 0.2);
     }
   }
 };

@@ -1,4 +1,5 @@
 ;(function () {
+  var body = document.body;
 
   var input = {
     x: 0,
@@ -43,8 +44,6 @@
 
   function onMouseMove(e) {
     e.preventDefault && e.preventDefault();
-    input.dx = e.clientX - input.x;
-    input.dy = e.clientY - input.y;
     input.x = e.clientX;
     input.y = e.clientY;
 

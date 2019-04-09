@@ -1,69 +1,97 @@
-;app.Buttons = function (data, parent, cb) {
-  var names = [], colors = [];
+;app.Buttons = function (parent, cb) {
+  var buttons, self;
 
-  data.columns.slice(1).forEach(function (col) {
-    names.push(data.names[col[0]]);
-    colors.push(data.colors[col[0]]);
-  });
+  self = {
+    setOver: function (overview) {
+      !buttons && reset(overview);
+    },
 
-  var buttons = names.map(function (name, i) {
-    var elem = new app.E('div');
-    elem.sX(10 * i);
-    elem.sY(450);
-    elem.e.style.backgroundColor = colors[i];
-    elem.e.style.position = 'relative';
-    elem.sC('button');
-    parent.add(elem);
+    setDat: function (dat) {
 
-    var tick = new app.E('img');
-    tick.e.style.position = 'relative';
-    tick.e.float = 'left';
-    tick.e.src = 'img/tick.png';
-    tick.e.height = 14;
-    tick.sC('tween');
-    elem.add(tick);
+    },
 
-    var text = new app.E('span');
-    text.e.style.margin = '10px';
-    text.e.style.position = 'relative';
-    text.sT(name);
-    elem.add(text);
+    views: null
+  };
 
-    elem.isActive = true;
-    elem.tick = tick;
+  function reset(dat) {
+    var names = [], colors = [];
 
-    function swap() {
-      for (var i = 0, l = buttons.length; i < l; i++) {
-        if (buttons[i] === elem) continue;
-        buttons[i].isActive = !buttons[i].isActive;
-        var s = buttons[i].isActive ? 1 : 0;
-        buttons[i].tick.sS(s, s);
+    if (buttons) {
+      // todo destroy or reuse
+    }
+
+    dat.columns.slice(1).forEach(function (col) {
+      names.push(dat.names[col[0]]);
+      colors.push(dat.colors[col[0]]);
+    });
+
+    buttons = names.map(function (name, i) {
+      var button, tick, text, timeout, downTime;
+
+      button = new app.E('div');
+      button.sX(0)
+      button.sY(450);
+      button.e.style.backgroundColor = colors[i];
+      button.sC('button');
+      parent.add(button);
+
+      tick = new app.E('img');
+      tick.e.src = 'img/tick.png';
+      tick.sC('tween');
+      tick.sC('tick');
+      button.add(tick);
+
+      text = new app.E('span');
+      text.sC('button-text');
+      text.sT(name);
+      button.add(text);
+
+      button.isActive = true;
+      button.tick = tick;
+
+      function switchAllBeside(btn) {
+        var i, s, l;
+        btn.isDown = false;
+
+        for (i = 0, l = buttons.length; i < l; i++) {
+          btn = buttons[i];
+
+          if (btn === button) continue;
+
+          btn.isActive = !btn.isActive;
+          s = btn.isActive ? 1 : 0;
+          btn.tick.sS(s, s);
+        }
 
         cb(buttons);
       }
-    }
 
-    elem.onDown(function () {
-      var time = Date.now();
-      var timeout = setTimeout(swap, 200);
-      app.i.upHandlers.push(onUp);
+      button.onDown(function () {
+        button.isDown = true;
+        downTime = Date.now();
+        timeout = setTimeout(function () {
+          switchAllBeside(button);
+        }, 200);
+      });
 
-      function onUp() {
-        app.i.upHandlers.splice(app.i.upHandlers.indexOf(onUp, 1));
+      button.onUp(function onUp() {
+        if (!button.isDown || Date.now() - downTime > 200) return;
+        button.isDown = false;
 
-        if (Date.now() - time > 200) return;
         clearTimeout(timeout);
+        button.isActive = !button.isActive;
 
-        elem.isActive = !elem.isActive;
-        var s = elem.isActive ? 1 : 0;
+        var s = button.isActive ? 1 : 0;
         tick.sS(s, s);
 
         cb(buttons);
-      }
+      });
+
+      return button;
     });
 
-    return elem;
-  });
+    self.views = buttons;
+  }
 
-  return buttons;
+  return self;
 };

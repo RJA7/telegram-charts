@@ -1,8 +1,10 @@
 ;window.addEventListener('load', function () {
-  var Elem = app.E;
-  var input = app.i;
+  var view;
 
-  // app.Chart(app.chartData[0].main, app.chartData[0].datas);
-  // app.Chart(app.chartData[1].main, app.chartData[1].datas);
-  app.Chart(app.chartData[2].main, app.chartData[2].datas);
+  for (var i = 0; i < 5; i++) {
+    view = app.Chart(app.contest[i]);
+    view.sX(30);
+    view.sY(20 + 560 * i);
+    view.e.style.margin = 'auto';
+  }
 });

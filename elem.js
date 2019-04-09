@@ -7,10 +7,8 @@
     this.y = 0;
     this.w = 0;
     this.h = 0;
-    this.ax = 0;
-    this.ay = 0;
-    this.e = e;
     this.o = 1;
+    this.e = e;
   }
 
   var p = E.prototype;
@@ -23,7 +21,7 @@
 
   p.sX = function (x) {
     this.x = x;
-    this.e.style.left = x - this.ax * this.w + 'px';
+    this.e.style.left = x + 'px';
   };
 
   p.gY = function () {
@@ -32,7 +30,7 @@
 
   p.sY = function (y) {
     this.y = y;
-    this.e.style.top = y - this.ay * this.h + 'px';
+    this.e.style.top = y + 'px';
   };
 
   p.gW = function () {
@@ -53,13 +51,6 @@
     this.e.style.height = height + 'px';
   };
 
-  p.sA = function (anchorX, anchorY) {
-    this.ax = anchorX;
-    this.ay = anchorY;
-    this.sX(this.x);
-    this.sY(this.y);
-  };
-
   p.sS = function (scaleX, scaleY) {
     this.e.style.transform = 'scale(' + scaleX + ', ' + scaleY + ')';
   };
@@ -68,18 +59,32 @@
     this.e.appendChild(childElem.e);
   };
 
-  p.sC = function (addClass, removeClass) {
+  p.sC = function (addClass) {
     this.e.classList.add(addClass);
-    removeClass && this.e.classList.remove(removeClass);
+  };
+
+  p.rC = function (removeClass) {
+    this.e.classList.remove(removeClass);
   };
 
   p.sT = function (text) {
     this.e.innerText = text;
   };
 
+  p.sTween = function(value) {
+    console.log(value)
+    this.e.style.transition = value;
+    this.e.style.webkitTransition = value;
+  };
+
   p.onDown = function (handler) {
     this.e.addEventListener('mousedown', handler);
     this.e.addEventListener('touchstart', handler);
+  };
+
+  p.onUp = function (handler) {
+    this.e.addEventListener('mouseup', handler);
+    this.e.addEventListener('touchend', handler);
   };
 
   p.sO = function (opacity) {

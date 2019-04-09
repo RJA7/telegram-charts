@@ -1,38 +1,62 @@
 .side-day {
     background-color: black;
     cursor: grab;
-    transition: all 0.1s ease;
+    transition: all 0.1s ease-out;
 }
 
 .frame {
     border: 5px solid black;
     cursor: grab;
-    transition: all 0.1s ease;
+    transition: all 0.1s ease-out;
 }
 
 .axis-line {
     background-color: black;
     vertical-align: text-bottom;
-    transition: all 0.1s ease;
+    transition: all 0.1s ease-out;
 }
 
 .axis-x {
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition: opacity 0.1s ease;
+}
+
+.tw {
+    transition: opacity, left 0.1s ease-out;
+}
+
+.tw-o {
+    transition: opacity 0.1s ease-out;
 }
 
 .button {
+    position: relative!important;
     border-radius: 30px;
-    padding: 10px 16px;
+    padding: 8px 4px 8px 12px;
+    margin: 2px 2px;
     font-weight: bold;
     font-size: 18px;
     float: left;
     cursor: pointer;
 }
 
+.button-text {
+    position: relative!important;
+    margin-right: 8px;
+    margin-left: 2px;
+    float: left;
+}
+
+.tick {
+    position: relative!important;
+    float: left;
+    margin: 1px;
+    height: 14px;
+    width: 14px;
+}
+
 .tween {
-    transition: all 0.2s ease;
+    transition: all 0.2s ease-out;
 }
 
 .info-line {

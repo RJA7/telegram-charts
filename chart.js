@@ -1,72 +1,103 @@
-;app.Chart = function (data, datas) {
-  var Elem = app.E;
-  var input = app.i;
-  var first, last, index;
+;app.Chart = function (contest) {
+  var Elem = app.E,
+    input = app.i,
+    overview = contest.overview,
+    data = contest.data,
+    leftIndex = 0,
+    rightIndex = overview.columns[0].length - 2,
+    body = document.body,
+    index, view, diagram, axisX, axesY, buttons, header, scrollBar, info, hLines;
 
   var chart = {
     getInputX: function getInputX() {
-      return input.x - view.x;
+      return input.x - view.e.offsetLeft + app.getScrollX();
     },
 
     getInputY: function () {
-      return input.y - view.y;
+      return input.y - view.e.offsetTop + app.getscrollY();
     }
   };
 
-  var view = new Elem('div');
-  view.sX(40);
-  document.body.appendChild(view.e);
+  view = new Elem('div');
+  body.appendChild(view.e);
+  view.sW(400);
+  view.sH(540);
 
-  var diagram = app.Diagram(400, 250);
-  diagram.setData(data);
+  header = app.Header(view, onOverMode);
+  buttons = app.Buttons(view, onButtonClick);
+
+  hLines = new app.HLines();
+
+  diagram = app.Diagram(400, 250, buttons, hLines);
+  diagram.view.sX(0);
   diagram.view.sY(80);
   view.add(diagram.view);
 
-  var axisX = app.AxisX(diagram.view);
-  axisX.setStandardData(data);
+  axisX = app.AxisX(diagram.view);
+  axesY = [app.AxisY(diagram.view)];
+  overview.y_scaled && axesY.push(app.AxisY(diagram.view, true));
 
-  var axesY = [app.AxisY(diagram.view, true)];
-  data.y_scaled && axesY.push(app.AxisY(diagram.view, false));
-  var buttons = app.Buttons(data, view, onButtonClick);
-
-  var header = app.Header(view, onStandardMode);
-
-  var scrollBar = app.ScrollBar(chart, buttons, onRangeChange);
-  scrollBar.setData(data);
-  scrollBar.setRange(0, data.columns[0].length - 2);
-  scrollBar.renderDiagram();
+  scrollBar = app.ScrollBar(chart, buttons, onRangeChange);
   view.add(scrollBar.view);
 
-  var info = app.Info(chart, diagram, scrollBar, onCloseMode);
+  info = app.Info(chart, diagram, scrollBar, onDatMode);
+
+  onOverMode();
 
   function onButtonClick() {
-    onRangeChange();
     scrollBar.renderDiagram();
+    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX, axesY);
   }
 
   function onRangeChange() {
-    diagram.render(scrollBar.sideLeft.index, scrollBar.sideRight.index, buttons, axisX, axesY);
-    header.setRange(scrollBar.sideLeft.index, scrollBar.sideRight.index, data, datas[index]);
+    header.setRange(scrollBar.leftIndex, scrollBar.rightIndex);
+    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX, axesY);
   }
 
-  function onStandardMode() {
-    axisX.setStandardData(data);
-    diagram.setData(data);
-    scrollBar.setData(data);
-    scrollBar.setRange(first, last);
+  function onOverMode() {
+    header.setOver(overview);
+    buttons.setOver(overview);
+    scrollBar.setOver(overview);
+    diagram.setOver(overview);
+    axisX.setOver(overview);
+    scrollBar.setRange(leftIndex, rightIndex);
     scrollBar.renderDiagram();
-    header.standardMode();
   }
 
-  function onCloseMode(i) {
+  function onDatMode(i) {
+    var dat = data[i];
+    leftIndex = scrollBar.leftIndex;
+    rightIndex = scrollBar.rightIndex;
     index = i;
-    first = scrollBar.sideLeft.index;
-    last = scrollBar.sideRight.index;
 
-    axisX.setCloseData(datas[i]);
-    diagram.setData(datas[i]);
-    scrollBar.setData(datas[i]);
+    header.setDat(dat);
+    buttons.setDat(dat);
+    scrollBar.setDat(dat);
+    scrollBar.setDat(dat);
+    diagram.setDat(dat);
+    axisX.setDat(dat);
+    scrollBar.setRange(0, dat.columns[0].length - 2);
     scrollBar.renderDiagram();
-    header.closeMode();
   }
+
+  return view;
+};
+
+app.supportPageOffset = window.pageXOffset !== undefined;
+app.isCSS1Compat = ((document.compatMode || '') === 'CSS1Compat');
+
+app.getScrollX = app.supportPageOffset ? function () {
+  return window.pageXOffset;
+} : app.isCSS1Compat ? function () {
+  return document.documentElement.scrollLeft;
+} : function () {
+  return document.body.scrollLeft;
+};
+
+app.getscrollY = app.supportPageOffset ? function () {
+  return window.pageYOffset;
+} : app.isCSS1Compat ? function () {
+  return document.documentElement.scrollTop;
+} : function () {
+  return document.body.scrollTop;
 };
