@@ -67,7 +67,7 @@ body {
 }
 
 .tween {
-    transition: all 0.2s ease-out;
+    transition: all 150ms ease-out;
 }
 
 .info-line {

@@ -10,8 +10,8 @@
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   view = new app.E('div');
-  view.sW(diagram.canvas.width);
-  view.sH(diagram.canvas.height);
+  view.sW(diagram.view.width);
+  view.sH(diagram.view.height);
   view.sO(0);
   view.sY(0);
   diagram.view.add(view);

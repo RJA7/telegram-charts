@@ -88,7 +88,13 @@
     scrollBar.renderDiagram();
   }
 
-  return view;
+  return {
+    view: view,
+
+    update: function () {
+      diagram.update();
+    }
+  };
 };
 
 app.supportPageOffset = window.pageXOffset !== undefined;
