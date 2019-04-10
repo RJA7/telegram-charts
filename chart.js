@@ -40,7 +40,7 @@
   scrollBar = app.ScrollBar(chart, buttons, onRangeChange);
   view.add(scrollBar.view);
 
-  info = app.Info(chart, diagram, scrollBar, onDatMode);
+  info = app.Info(chart, diagram, scrollBar, buttons, onDatMode);
 
   onDayMode();
   onOverMode();
@@ -66,6 +66,7 @@
     scrollBar.setOver(overview);
     diagram.setOver(overview);
     axisX.setOver(overview);
+    info.setOver(overview);
     scrollBar.setRange(leftIndex, rightIndex);
     scrollBar.renderDiagram();
   }
@@ -82,6 +83,7 @@
     scrollBar.setDat(dat);
     diagram.setDat(dat);
     axisX.setDat(dat);
+    info.setDat(dat);
     scrollBar.setRange(0, dat.columns[0].length - 2);
     scrollBar.renderDiagram();
   }

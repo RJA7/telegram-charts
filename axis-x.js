@@ -85,7 +85,7 @@
       for (key in oldHash) {
         if (!hash[key]) {
           elems.push(oldHash[key]);
-          // oldHash[key].sO(0);
+          oldHash[key].sO(0);
           oldHash[key].sX(-(elem.posX - minX) * sx);
           console.log((elem.posX - minX) * sx)
         }

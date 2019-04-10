@@ -1,5 +1,6 @@
-.body {
+body {
     font-family: Helvetica, serif;
+    font-size: 14px;
 }
 
 .side-day {
@@ -24,7 +25,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: rgba(37,37,41,0.5);
-    transition: left 1s ease-out;
+    transition: left 0.2s ease-out;
 }
 
 .axis-y {
@@ -73,12 +74,6 @@
     background-color: black;
 }
 
-.info-bg {
-    background-color: aliceblue;
-    border-radius: 20px;
-    border: 2px solid black;
-}
-
 .title {
     font-weight: bold;
 }
@@ -90,4 +85,34 @@
 .range-text {
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.info-bg {
+    background-color: #ffffff;
+    border-radius: 10px;
+    border: 2px solid rgba(24,45,59,0.1);
+}
+
+.info-name {
+    /*font-weight: bold;*/
+}
+
+.info-main-text {
+    font-weight: bold;
+}
+
+.info-val {
+    text-align: right;
+}
+
+i {
+    border: solid rgba(0,0,0,0.4);
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+.arrow-right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
 }

@@ -29,7 +29,9 @@
       var button, tick, text, timeout, downTime;
 
       button = new app.E('div');
-      button.sX(0)
+      button.name = name;
+      button.color = colors[i];
+      button.sX(0);
       button.sY(450);
       button.e.style.backgroundColor = colors[i];
       button.sC('button');
