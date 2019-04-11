@@ -1,18 +1,24 @@
-;app.Diagram = function (width, height, buttons, hLines) {
+;app.Diagram = function (width, height, buttons, hLines, addReserve) {
   var colX, colors, cols, yScaled, stacked, types, draw, x, y,
     prevScaleX = 0, prevScaleY, prevMinY, prevMaxY, prevMinX, prevMaxX,
     prevLeftIndex = -1, prevRightIndex, animate, minimalX, maximalX, steps = 5, colsLength,
     minimalY = Number.MAX_VALUE,
     maximalY = -Number.MAX_VALUE,
-    col, jLen, scaleX, scaleY, offsetY, offsetsY, scalesY, minimalsY, minY, maxY, sy, my, render, canvasReserveX = 250;
+    col, scaleX, scaleY, offsetY, offsetsY, scalesY, minimalsY, minY, maxY, sy, my, render,
+    canvasReserveX = addReserve ? 250 : 0;
 
   var view = new app.E('div');
-  view.e.style.overflow = 'hidden';
   view.sW(width);
   view.sH(height);
 
+  var overflow = new app.E('div');
+  overflow.e.style.overflow = 'hidden';
+  overflow.sW(width);
+  overflow.sH(height);
+  view.add(overflow);
+
   var canvasContainer = new app.E('div');
-  view.add(canvasContainer);
+  overflow.add(canvasContainer);
 
   var canvas = document.createElement('canvas'),
     ctx = canvas.getContext('2d', {alpha: false});
@@ -81,7 +87,8 @@
       var i, j, l;
       minimalX = colX[leftIndex];
       maximalX = colX[rightIndex];
-      jLen = Math.min(rightIndex + 1, colsLength);
+      minimalY = Number.MAX_VALUE;
+      maximalY = -Number.MAX_VALUE;
 
       for (i = 0, l = cols.length; i < l; i++) {
         if (buttons.views[i] && !buttons.views[i].isActive) continue;
@@ -99,6 +106,9 @@
       if (minimalY === Number.MAX_VALUE) return;
 
       scaleX = width / (maximalX - minimalX);
+
+      axisX && axisX.render(leftIndex, rightIndex, scaleX);
+
 
       var reservedIndex = Math.ceil((rightIndex - leftIndex) * 0.5);
       rightIndex = Math.min(col.length - 1, rightIndex + reservedIndex);
@@ -120,7 +130,6 @@
       canvas.style.left = canvasContainerX - canvasContainer.x + (colX[leftIndex] - colX[prevLeftIndex]) * prevScaleX + 'px';
 
       prevScaleX = scaleX;
-      prevScaleY = scaleY;
       prevMinY = minimalY;
       prevMaxY = maximalY;
       prevMinX = minimalX;
@@ -133,7 +142,8 @@
 
       render(leftIndex, rightIndex);
 
-      // axisX && axisX.render(leftIndex, rightIndex, minimalX, scaleX);
+      prevScaleY = scaleY;
+
       // hLines && hLines.render(minimalY, scaleY, offsetY);
       //
       // if (axesY) {
@@ -148,7 +158,7 @@
     }
   };
 
-  function renderLines(leftIndex) {
+  function renderLines(leftIndex, rightIndex) {
     var i, j;
 
     if (minimalY === maximalY) minimalY = 0;
@@ -167,7 +177,7 @@
         minY = Number.MAX_VALUE;
         maxY = -Number.MAX_VALUE;
 
-        for (j = leftIndex; j < jLen; j++) {
+        for (j = leftIndex; j <= rightIndex; j++) {
           minY = Math.min(minY, col[j]);
           maxY = Math.max(maxY, col[j]);
         }
@@ -195,7 +205,7 @@
       ctx.beginPath();
       ctx.moveTo((colX[leftIndex] - minimalX) * scaleX, (col[leftIndex] - my) * sy);
 
-      for (j = leftIndex + 1; j < jLen; j++) {
+      for (j = leftIndex + 1; j <= rightIndex; j++) {
         ctx.lineTo((colX[j] - minimalX) * scaleX, (col[j] - my) * sy);
       }
 

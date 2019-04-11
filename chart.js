@@ -28,7 +28,7 @@
 
   hLines = new app.HLines();
 
-  diagram = app.Diagram(400, 250, buttons, hLines);
+  diagram = app.Diagram(400, 250, buttons, hLines, true);
   diagram.view.sX(0);
   diagram.view.sY(80);
   view.add(diagram.view);

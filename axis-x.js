@@ -1,20 +1,35 @@
 ;app.AxisX = function (parent) {
+  var elems = [], prevLeftIndex, prevScaleX;
+  var hash = {}, oldHash, colX, texts;
   app.months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  var elems = [];
-  var elemsToStartTransition = [];
+
+  var view = new app.E('div');
+  view.sY(250);
+  parent.add(view);
 
   function createElem() {
     var elem = new app.E('div');
     elem.sT(0);
-    elem.sC('axis-x');
+    elem.sW(50);
     parent.add(elem);
 
     return elem;
   }
 
-  var hash = {}, oldHash, colX, texts;
+  function addTween(elem, x) {
+    elem.sC('tween');
+    elem.sX(x);
+  }
 
-  function clearHash() {
+  function release(elem) {
+    elem.rC('tween');
+    elems.push(elem);
+  }
+
+  function reset() {
+    prevScaleX = 1;
+    prevLeftIndex = 0;
+
     for (var key in hash) {
       elems.push(hash[key]);
       hash[key].sO(0);
@@ -23,18 +38,9 @@
     hash = {};
   }
 
-  function delayCall() {
-    var e;
-    while (elemsToStartTransition.length !== 0) {
-      e = elemsToStartTransition.pop();
-      e.sC('tw');
-      e.rC('tw-o');
-    }
-  }
-
   return {
     setOver: function (overview) {
-      clearHash();
+      reset();
       colX = overview.columns[0].slice(1);
 
       texts = colX.map(function (time) {
@@ -44,7 +50,7 @@
     },
 
     setDat: function (dat) {
-      clearHash();
+      reset();
       colX = dat.columns[0].slice(1);
 
       texts = colX.map(function (time) {
@@ -56,41 +62,57 @@
       });
     },
 
-    render: function (leftIndex, rightIndex, minX, sx) {
-      var desStep = Math.ceil((rightIndex - leftIndex) / 7),
-        step = 1, i, key;
+    render: function (leftIndex, rightIndex, scaleX) {
+      var desOffset = Math.floor((rightIndex - leftIndex) / 5);
+      var offset = 1;
 
-      while (step < desStep) step *= 2;
+      while (offset < desOffset) offset *= 1.4;
+      offset = Math.floor(offset);
+
+      var elem;
+      var i = leftIndex;
+      var l = rightIndex;
 
       oldHash = hash;
       hash = {};
 
-      for (i = leftIndex; i < rightIndex; i += step) {
-        var elem = oldHash[i];
+      for (; i <= l; i += offset) {
+        if (i < 0) continue;
+
+        elem = oldHash[i];
 
         if (!elem) {
-          elem = elems.pop() || createElem();
-          elem.rC('tw');
-          elem.sC('tw-o');
-          elemsToStartTransition.push(elem);
+          elem = elems.pop();
+
+          if (!elem) {
+            elem = createElem();
+            view.add(elem);
+          }
+
+          elem.index = i;
+          elem.sO(1);
+          elem.sT(texts[i]);
+          elem.sX((colX[i] - colX[prevLeftIndex]) * prevScaleX);
+          setTimeout(addTween, 1, elem, (colX[i] - colX[leftIndex]) * scaleX);
+        } else {
+          elem.sX((colX[i] - colX[leftIndex]) * scaleX);
         }
 
-        hash[i] = elem;
-        elem.sT(texts[i]);
-        elem.posX = colX[i];
-        elem.sX((elem.posX - minX) * sx);
-        elem.o === 0 && elem.sO(1);
+        hash[elem.index] = elem;
       }
 
-      for (key in oldHash) {
-        if (!hash[key]) {
-          elems.push(oldHash[key]);
-          oldHash[key].sO(0);
-          oldHash[key].sX(-(elem.posX - minX) * sx);
+      for (var key in oldHash) {
+        elem = oldHash[key];
+
+        if (!hash[elem.index]) {
+          elem.sX((colX[elem.index] - colX[leftIndex]) * scaleX);
+          elem.sO(0);
+          setTimeout(release, 500, elem);
         }
       }
 
-      setTimeout(delayCall, 0.2);
+      prevLeftIndex = leftIndex;
+      prevScaleX = scaleX;
     }
   }
 };
