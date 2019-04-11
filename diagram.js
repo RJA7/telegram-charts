@@ -106,9 +106,9 @@
       if (minimalY === Number.MAX_VALUE) return;
 
       scaleX = width / (maximalX - minimalX);
+      scaleY = height / (maximalY - minimalY);
 
       axisX && axisX.render(leftIndex, rightIndex, scaleX);
-
 
       var reservedIndex = Math.ceil((rightIndex - leftIndex) * 0.5);
       rightIndex = Math.min(col.length - 1, rightIndex + reservedIndex);
@@ -117,11 +117,10 @@
       if (!animate) {
         animate = true;
 
-        var newWidth = (parseInt(canvas.style.width)) * prevScaleX / scaleX;
-
         canvas.style.top = ((prevMinY - minimalY) - (maximalY - prevMaxY) - 0.5) * prevScaleY + 'px';
-        canvas.style.width = newWidth + 'px';
-        canvas.style.height = height * prevScaleY / scaleY + 'px';
+        canvas.style.height = (parseInt(canvas.style.height)) * prevScaleY / scaleY + 'px';
+
+        canvas.style.width = (parseInt(canvas.style.width)) * prevScaleX / scaleX + 'px';
         canvas.classList.remove('tween');
       }
 
@@ -130,6 +129,7 @@
       canvas.style.left = canvasContainerX - canvasContainer.x + (colX[leftIndex] - colX[prevLeftIndex]) * prevScaleX + 'px';
 
       prevScaleX = scaleX;
+      prevScaleY = scaleY;
       prevMinY = minimalY;
       prevMaxY = maximalY;
       prevMinX = minimalX;
@@ -142,7 +142,6 @@
 
       render(leftIndex, rightIndex);
 
-      prevScaleY = scaleY;
 
       // hLines && hLines.render(minimalY, scaleY, offsetY);
       //
@@ -164,7 +163,6 @@
     if (minimalY === maximalY) minimalY = 0;
 
     offsetY = Math.max(1, Math.floor((maximalY - minimalY) / steps));
-    scaleY = height / (maximalY - minimalY);
 
     if (yScaled) {
       offsetsY = [];
