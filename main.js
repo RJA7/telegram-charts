@@ -1,7 +1,7 @@
 ;window.addEventListener('load', function () {
   var chart, charts = [];
 
-  for (var i = 0; i < 1; i++) {
+  for (var i = 0; i < 5; i++) {
     chart = app.Chart(app.contest[i]);
     charts.push(chart);
   }
@@ -21,7 +21,7 @@
     var offset = 25;
     var sc = Math.min(1, window.innerWidth / (400 + offset * 2));
 
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0, l = charts.length; i < l; i++) {
       chart = charts[i];
       chart.view.sX(offset * sc);
       chart.view.sY((20 + 560 * i) * sc);

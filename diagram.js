@@ -1,10 +1,13 @@
 ;app.Diagram = function (width, height, buttons, hLines, addReserve) {
   var colX, colors, cols, yScaled, stacked, types, draw, x, y,
-    prevScaleX = 0, prevScaleY, prevMinY, prevMaxY, prevMinX, prevMaxX,
-    prevLeftIndex = -1, prevRightIndex, animate, minimalX, maximalX, steps = 5, colsLength,
-    minimalY = Number.MAX_VALUE,
-    maximalY = -Number.MAX_VALUE,
-    col, scaleX, scaleY, offsetY, offsetsY, scalesY, minimalsY, minY, maxY, sy, my, render,
+    prevScaleX = 0, prevScaleY = [], prevMaxY = [],
+    prevLeftIndex = -1, animate, steps = 5, colsLength,
+    maxX, minX, scaleX,
+    mainMinY = Number.MAX_VALUE,
+    mainMaxY = -Number.MAX_VALUE,
+    col, scaleY = [], offsetY = [], minY = [], maxY = [], render,
+    canvases = [], canvasContainers = [], contexts = [], canvasContainer, canvas, ctx, canvasesLen,
+    mainOffset, mainScaleY,
     canvasReserveX = addReserve ? 250 : 0;
 
   var view = new app.E('div');
@@ -17,19 +20,38 @@
   overflow.sH(height);
   view.add(overflow);
 
-  var canvasContainer = new app.E('div');
-  overflow.add(canvasContainer);
-
-  var canvas = document.createElement('canvas'),
-    ctx = canvas.getContext('2d', {alpha: false});
-  canvas.width = width + canvasReserveX * 2;
-  canvas.height = height;
-  canvas.style.transform = 'scale(1, -1)';
-  canvas.style.height = height + 'px';
-  canvas.style.position = 'absolute';
-  canvasContainer.e.appendChild(canvas);
-
   hLines && hLines.addTo(view);
+
+  function init(dat) {
+    reset(dat);
+    init = reset;
+
+    for (var i = 0; i < canvasesLen; i++) {
+      canvasContainer = new app.E('div');
+      overflow.add(canvasContainer);
+
+      canvas = document.createElement('canvas');
+      ctx = canvas.getContext('2d', {alpha: true});
+      canvas.width = width + canvasReserveX * 2;
+      canvas.height = height;
+      canvas.style.transform = 'scale(1, -1)';
+      canvas.style.height = height + 'px';
+      canvas.style.position = 'absolute';
+      canvasContainer.e.appendChild(canvas);
+
+      canvases[i] = canvas;
+      contexts[i] = ctx;
+      canvasContainers[i] = canvasContainer;
+    }
+
+    if (!yScaled) {
+      for (i = 1; i < colsLength; i++) {
+        canvases[i] = canvases[0];
+        contexts[i] = contexts[0];
+        canvasContainers[i] = canvasContainers[0];
+      }
+    }
+  }
 
   function reset(dat) {
     animate = false;
@@ -39,15 +61,6 @@
     stacked = dat.stacked || types.y0 === 'bar';
     colors = [];
 
-    prevScaleX = width / (colX[colX.length - 1] - colX[0]);
-
-    if (stacked) {
-      render = renderStacked;
-      draw = dat.percentage ? stackedLines : stackedBars;
-    } else {
-      render = renderLines;
-    }
-
     cols = dat.columns.slice(1).map(function (col) {
       colors.push(dat.colors[col[0]]);
       col = col.slice(1);
@@ -56,6 +69,16 @@
     });
 
     colsLength = cols.length;
+
+    if (stacked) {
+      render = renderStacked;
+      draw = dat.percentage ? stackedLines : stackedBars;
+    } else {
+      render = renderLines;
+    }
+
+    canvasesLen = yScaled ? colsLength : 1;
+    prevScaleX = width / (colX[colX.length - 1] - colX[0]);
   }
 
   function startAnimation() {
@@ -74,37 +97,25 @@
     bgColor: '',
 
     setOver: function (overview) {
-      reset(overview);
+      init(overview);
     },
 
     setDat: function (dat) {
-      reset(dat);
+      init(dat);
     },
 
     render: function (leftIndex, rightIndex, axisX, axesY) {
-      var i, j, l;
-      minimalX = colX[leftIndex];
-      maximalX = colX[rightIndex];
-      minimalY = Number.MAX_VALUE;
-      maximalY = -Number.MAX_VALUE;
+      var i;
 
-      for (i = 0, l = cols.length; i < l; i++) {
-        if (buttons.views[i] && !buttons.views[i].isActive) continue;
-        col = cols[i];
+      calcBounds(leftIndex, rightIndex);
 
-        for (j = leftIndex; j <= rightIndex; j++) {
-          minimalY = Math.min(minimalY, col[j]);
-          maximalY = Math.max(maximalY, col[j]);
-        }
+      for (i = 0; i < canvasesLen; i++) {
+        ctx = contexts[i];
+        // ctx.fillStyle = this.bgColor;
+        ctx.clearRect(0, 0, canvas.width, height);
       }
 
-      ctx.fillStyle = this.bgColor;
-      ctx.fillRect(0, 0, canvas.width, height);
-
-      if (minimalY === Number.MAX_VALUE) return;
-
-      scaleX = width / (maximalX - minimalX);
-      scaleY = height / (maximalY - minimalY);
+      if (mainMinY === Number.MAX_VALUE) return;
 
       axisX && axisX.render(leftIndex, rightIndex, scaleX);
 
@@ -115,30 +126,31 @@
       if (!animate) {
         animate = true;
 
-        canvas.style.top = (-(maximalY - prevMaxY)) * prevScaleY + 'px';
-        canvas.style.height = (parseInt(canvas.style.height)) * prevScaleY / scaleY + 'px';
+        for (i = 0; i < canvasesLen; i++) {
+          canvas = canvases[i];
+          canvasContainer = canvasContainers[i];
 
-        canvas.style.width = (parseInt(canvas.style.width)) * prevScaleX / scaleX + 'px';
-        canvas.classList.remove('tween');
+          canvas.style.top = (prevMaxY[i] - maxY[i]) * prevScaleY[i] + 'px';
+          canvas.style.height = (parseInt(canvas.style.height)) * prevScaleY[i] / scaleY[i] + 'px';
 
-        setTimeout(startAnimation, 0);
+          canvas.style.width = (parseInt(canvas.style.width)) * prevScaleX / scaleX + 'px';
+          canvas.classList.remove('tween');
+
+          var canvasContainerX = canvasContainer.x;
+          canvasContainer.sX((colX[leftIndex] - minX) * scaleX);
+          canvas.style.left = canvasContainerX - canvasContainer.x + (colX[leftIndex] - colX[prevLeftIndex]) * prevScaleX + 'px';
+
+          setTimeout(startAnimation, 0);
+          prevScaleY[i] = scaleY[i];
+          prevMaxY[i] = maxY[i];
+        }
       }
 
-      var canvasContainerX = canvasContainer.x;
-      canvasContainer.sX((colX[leftIndex] - minimalX) * scaleX);
-      canvas.style.left = canvasContainerX - canvasContainer.x + (colX[leftIndex] - colX[prevLeftIndex]) * prevScaleX + 'px';
-
       prevScaleX = scaleX;
-      prevScaleY = scaleY;
-      prevMinY = minimalY;
-      prevMaxY = maximalY;
-      prevMinX = minimalX;
-      prevMaxX = maximalX;
       prevLeftIndex = leftIndex;
-      prevRightIndex = rightIndex;
 
-      minimalX = colX[leftIndex];
-      maximalX = colX[rightIndex];
+      minX = colX[leftIndex];
+      maxX = colX[rightIndex];
 
       render(leftIndex, rightIndex);
 
@@ -160,51 +172,16 @@
   function renderLines(leftIndex, rightIndex) {
     var i, j;
 
-    if (minimalY === maximalY) minimalY = 0;
-
-    offsetY = Math.max(1, Math.floor((maximalY - minimalY) / steps));
-
-    if (yScaled) {
-      offsetsY = [];
-      scalesY = [];
-      minimalsY = [];
-
-      for (i = 0; i < colsLength; i++) {
-        if (!buttons.views[i].isActive) continue;
-        col = cols[i];
-        minY = Number.MAX_VALUE;
-        maxY = -Number.MAX_VALUE;
-
-        for (j = leftIndex; j <= rightIndex; j++) {
-          minY = Math.min(minY, col[j]);
-          maxY = Math.max(maxY, col[j]);
-        }
-
-        var offset = Math.max(1, Math.floor((maxY - minY) / steps));
-        // offset = round(offset);
-        offsetsY[i] = offset;
-        scalesY[i] = offsetY / offset * scaleY;
-        minimalsY[i] = minY;
-      }
-    }
-
     for (i = 0; i < colsLength; i++) {
       if (!buttons.views[i].isActive) continue;
       col = cols[i];
-
-      if (yScaled) {
-        sy = scalesY[i];
-        my = minimalsY[i];
-      } else {
-        sy = scaleY;
-        my = minimalY;
-      }
+      ctx = contexts[i];
 
       ctx.beginPath();
-      ctx.moveTo((colX[leftIndex] - minimalX) * scaleX, (col[leftIndex] - my) * sy);
+      ctx.moveTo((colX[leftIndex] - minX) * scaleX, (col[leftIndex] - minY[i]) * scaleY[i]);
 
       for (j = leftIndex + 1; j <= rightIndex; j++) {
-        ctx.lineTo((colX[j] - minimalX) * scaleX, (col[j] - my) * sy);
+        ctx.lineTo((colX[j] - minX) * scaleX, (col[j] - minY[i]) * scaleY[i]);
       }
 
       ctx.strokeStyle = colors[i];
@@ -228,19 +205,19 @@
     }
 
     for (j = leftIndex; j <= rightIndex; j++) {
-      maximalY = Math.max(maximalY, stack[j]);
+      mainMaxY = Math.max(mainMaxY, stack[j]);
     }
 
-    minimalY = 0;
+    mainMinY = 0;
     // maximalY = round(maximalY);
-    offsetY = Math.max(1, Math.floor(maximalY / steps));
-    scaleY = height / maximalY;
+    offsetY = Math.max(1, Math.floor(mainMaxY / steps));
+    scaleY = height / mainMaxY;
 
     for (i = cols.length - 1; i >= 0; i--) {
       if (!buttons.views[i].isActive) continue;
       col = cols[i];
 
-      x = (colX[leftIndex] - minimalX) * scaleX;
+      x = (colX[leftIndex] - minX) * scaleX;
 
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -249,7 +226,7 @@
         draw(x, col, stack, j);
       }
 
-      ctx.lineTo((colX[rightIndex] - minimalX) * scaleX, 0);
+      ctx.lineTo((colX[rightIndex] - minX) * scaleX, 0);
       ctx.lineTo(0, 0);
       ctx.closePath();
 
@@ -259,16 +236,57 @@
   }
 
   function stackedLines(x, col, stack, j) {
-    ctx.lineTo((colX[j] - minimalX) * scaleX, (stack[j] - minimalY) * scaleY);
+    ctx.lineTo((colX[j] - minX) * scaleX, (stack[j] - mainMinY) * scaleY);
     stack[j] -= col[j];
   }
 
   function stackedBars(x, col, stack, j) {
-    y = (stack[j] - minimalY) * scaleY;
+    y = (stack[j] - mainMinY) * scaleY;
     stack[j] -= col[j];
     ctx.lineTo(x, y);
-    x = (colX[j + 1] - minimalX) * scaleX;
+    x = (colX[j + 1] - minX) * scaleX;
     ctx.lineTo(x, y);
+  }
+
+  function calcBounds(leftIndex, rightIndex) {
+    var i, j;
+    minX = colX[leftIndex];
+    maxX = colX[rightIndex];
+    mainMinY = Number.MAX_VALUE;
+    mainMaxY = -Number.MAX_VALUE;
+    scaleX = width / (maxX - minX);
+
+    for (i = 0; i < colsLength; i++) {
+      if (!buttons.views[i].isActive) continue;
+      col = cols[i];
+      minY[i] = Number.MAX_VALUE;
+      maxY[i] = -Number.MAX_VALUE;
+
+      for (j = leftIndex; j <= rightIndex; j++) {
+        minY[i] = Math.min(minY[i], col[j]);
+        maxY[i] = Math.max(maxY[i], col[j]);
+      }
+
+      offsetY[i] = Math.max(1, Math.floor((maxY[i] - minY[i]) / steps));
+      mainMaxY = Math.max(maxY[i], mainMaxY);
+      mainMinY = Math.min(minY[i], mainMinY);
+    }
+
+    mainMinY = mainMinY === mainMaxY ? 0 : mainMinY;
+    mainOffset = Math.max(1, Math.floor((mainMaxY - mainMinY) / steps));
+    mainScaleY = height / (mainMaxY - mainMinY);
+
+    if (yScaled) {
+      for (i = 0; i < colsLength; i++) {
+        scaleY[i] = mainScaleY * offsetY[i] / mainOffset;
+      }
+    } else {
+      for (i = 0; i < colsLength; i++) {
+        scaleY[i] = mainScaleY;
+        minY[i] = mainMinY;
+        maxY[i] = mainMaxY;
+      }
+    }
   }
 };
 
