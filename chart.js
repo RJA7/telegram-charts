@@ -58,7 +58,7 @@
 
   function onDayMode() {
     diagram.bgColor = '#ffffff';
-    scrollBar.diagram.bgColor = 'rgba(226,238,249,0.6)';
+    scrollBar.diagram.bgColor = '#ffffff'; // 'rgba(226,238,249,0.6)';
   }
 
   function onOverMode() {

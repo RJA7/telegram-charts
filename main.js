@@ -18,12 +18,12 @@
   }());
 
   function onResize() {
-    var offset = 20;
-    var sc = (window.innerWidth - offset * 2) / 400;
+    var offset = 25;
+    var sc = Math.min(1, window.innerWidth / (400 + offset * 2));
 
     for (var i = 0; i < 1; i++) {
       chart = charts[i];
-      chart.view.sX(offset);
+      chart.view.sX(offset * sc);
       chart.view.sY((20 + 560 * i) * sc);
       chart.view.sS(sc, sc);
       chart.view.sc = sc;

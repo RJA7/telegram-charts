@@ -51,16 +51,13 @@
       button.isActive = true;
       button.tick = tick;
 
-      function switchAllBeside(btn) {
+      function turnOffAllBeside(btn) {
         var i, s, l;
         btn.isDown = false;
 
         for (i = 0, l = buttons.length; i < l; i++) {
           btn = buttons[i];
-
-          if (btn === button) continue;
-
-          btn.isActive = !btn.isActive;
+          btn.isActive = btn === button
           s = btn.isActive ? 1 : 0;
           btn.tick.sS(s, s);
         }
@@ -72,7 +69,7 @@
         button.isDown = true;
         downTime = Date.now();
         timeout = setTimeout(function () {
-          switchAllBeside(button);
+          turnOffAllBeside(button);
         }, 200);
       });
 

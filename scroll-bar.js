@@ -114,7 +114,7 @@
     return chart.getInputX() - view.x;
   }
 
-  function getIndex(x, offset) {
+  function getIndex(x) {
     var i = 0, l = anchorsX.length, d, index = 0;
     var minDist = Number.MAX_VALUE;
 
