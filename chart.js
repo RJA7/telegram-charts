@@ -65,6 +65,7 @@
     scrollBar.setOver(overview);
     diagram.setOver(overview);
     axisX.setOver(overview);
+    hLines.setOver(overview);
     info.setOver(overview);
     scrollBar.setRange(leftIndex, rightIndex);
     scrollBar.renderDiagram();
@@ -82,6 +83,7 @@
     scrollBar.setDat(dat);
     diagram.setDat(dat);
     axisX.setDat(dat);
+    hLines.setDat(dat);
     info.setDat(dat);
     scrollBar.setRange(0, dat.columns[0].length - 2);
     scrollBar.renderDiagram();
@@ -94,23 +96,4 @@
 
     }
   };
-};
-
-app.supportPageOffset = window.pageXOffset !== undefined;
-app.isCSS1Compat = ((document.compatMode || '') === 'CSS1Compat');
-
-app.getScrollX = app.supportPageOffset ? function () {
-  return window.pageXOffset;
-} : app.isCSS1Compat ? function () {
-  return document.documentElement.scrollLeft;
-} : function () {
-  return document.body.scrollLeft;
-};
-
-app.getscrollY = app.supportPageOffset ? function () {
-  return window.pageYOffset;
-} : app.isCSS1Compat ? function () {
-  return document.documentElement.scrollTop;
-} : function () {
-  return document.body.scrollTop;
 };

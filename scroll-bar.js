@@ -105,7 +105,7 @@
     sideLeft.sX(leftIndex / totalDays * width - sideWidth);
     sideRight.sX(rightIndex / totalDays * width);
     frame.sX(sideLeft.x - 5 + sideWidth);
-    frame.sW(sideRight.x - sideLeft.x - sideWidth);
+    frame.sW(sideRight.x - sideLeft.x - sideWidth + 3);
 
     cb(leftIndex, rightIndex);
   }

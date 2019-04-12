@@ -262,9 +262,9 @@
     }
 
     mainMinY = mainMinY === mainMaxY ? 0 : mainMinY;
-    mainMinY = round(mainMinY, 'floor');
+    mainMinY = app.round(mainMinY, 'floor');
     mainOffset = Math.max(1, Math.floor((mainMaxY - mainMinY) / steps));
-    mainOffset = round(mainOffset, 'ceil');
+    mainOffset = app.round(mainOffset, 'ceil');
     mainMaxY = mainMinY + mainOffset * steps;
     mainScaleY = height / (mainMaxY - mainMinY);
 
@@ -277,19 +277,8 @@
         scaleY[i] = mainScaleY;
         minY[i] = mainMinY;
         maxY[i] = mainMaxY;
+        offsetY[i] = mainOffset;
       }
     }
   }
 };
-
-function round(num, func) {
-  var l = String(num).length - 1;
-  var n = '1';
-
-  for (var i = 0; i < l; i++) {
-    n += '0';
-  }
-
-  n = Number(n);
-  return Math[func](num / n) * n;
-}

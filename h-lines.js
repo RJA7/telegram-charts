@@ -52,6 +52,14 @@ app.HLines = function (axesLen) {
       parent.add(view);
     },
 
+    setOver: function() {
+      reset();
+    },
+
+    setDat: function() {
+      reset();
+    },
+
     render: function (minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffsetY) {
       var i, j, y, text;
       oldHash = hash;
@@ -68,17 +76,17 @@ app.HLines = function (axesLen) {
             view.add(line);
           }
 
-          for (j = 0; j < axesLen; j++) {
-            text = line.texts[j];
-            text.sT(app.formatNumber(offsetY[j] * i * scaleY[j], true));
-          }
-
           line.index = y;
           line.sO(1);
           line.sB((y - prevMainMinY) * prevScaleY);
           setTimeout(addTween, 0, line, (y - mainMinY) * mainScaleY);
         } else {
           line.sB((y - mainMinY) * mainScaleY);
+        }
+
+        for (j = 0; j < axesLen; j++) {
+          text = line.texts[j];
+          text.sT(format(minY[j] + offsetY[j] * i));
         }
 
         hash[line.index] = line;
@@ -99,3 +107,22 @@ app.HLines = function (axesLen) {
     }
   }
 };
+
+function format(number) {
+  if (number === 0) return 0;
+
+  var s = '';
+
+  if (number > 1000000000) {
+    number *= 0.000000001;
+    s = 'B';
+  } else if (number > 1000000) {
+    number *= 0.000001;
+    s = 'M';
+  } else if (number > 1000) {
+    number *= 0.001;
+    s = 'K';
+  }
+
+  return number.toFixed(number > 100 ? 0 : number > 10 ? 1 : 2) + s;
+}
