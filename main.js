@@ -1,7 +1,7 @@
 ;window.addEventListener('load', function () {
   var chart, charts = [];
 
-  for (var i = 0; i < 2; i++) {
+  for (var i = 0; i < 3; i++) {
     chart = app.Chart(app.contest[i]);
     charts.push(chart);
   }

@@ -5,9 +5,11 @@
     maxX, minX, scaleX,
     mainMinY = Number.MAX_VALUE,
     mainMaxY = -Number.MAX_VALUE,
-    col, scaleY = [], offsetY = [], minY = [], maxY = [], render,
+    scaleY = [], offsetY = [], minY = [], maxY = [], render,
     canvases = [], canvasContainers = [], contexts = [], canvasContainer, canvas, ctx, canvasesLen,
     mainOffset, mainScaleY,
+    stack = [],
+    calcBounds,
     canvasReserveX = addReserve ? 250 : 0;
 
   var view = new app.E('div');
@@ -31,7 +33,7 @@
       overflow.add(canvasContainer);
 
       canvas = document.createElement('canvas');
-      ctx = canvas.getContext('2d', {alpha: true});
+      ctx = canvas.getContext('2d', {alpha: canvasesLen !== 1});
       canvas.width = width + canvasReserveX * 2;
       canvas.height = height;
       canvas.style.transform = 'scale(1, -1)';
@@ -58,7 +60,7 @@
     colX = dat.columns[0].slice(1);
     types = dat.types;
     yScaled = dat.y_scaled;
-    stacked = dat.stacked || types.y0 === 'bar';
+    stacked = dat.stacked/* || types.y0 === 'bar'*/;
     colors = [];
 
     cols = dat.columns.slice(1).map(function (col) {
@@ -73,8 +75,10 @@
     if (stacked) {
       render = renderStacked;
       draw = dat.percentage ? stackedLines : stackedBars;
+      calcBounds = stackedCalcBounds;
     } else {
       render = renderLines;
+      calcBounds = linesCalcBounds;
     }
 
     canvasesLen = yScaled ? colsLength : 1;
@@ -96,7 +100,7 @@
 
   return {
     view: view,
-    bgColor: '',
+    bgColor: '#ffffff',
 
     setOver: function (overview) {
       init(overview);
@@ -111,10 +115,9 @@
 
       calcBounds(leftIndex, rightIndex);
 
-      for (i = 0; i < canvasesLen; i++) {
-        ctx = contexts[i];
-        ctx.clearRect(0, 0, canvas.width, height);
-      }
+      contexts[0].fillStyle = this.bgColor;
+      contexts[0].fillRect(0, 0, canvas.width, canvas.height);
+      yScaled && contexts[1].clearRect(0, 0, canvas.width, canvas.height);
 
       if (mainMinY === Number.MAX_VALUE) return;
 
@@ -122,7 +125,7 @@
       hLines && hLines.render(minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffset, axesY);
 
       var reservedIndex = Math.ceil((rightIndex - leftIndex) * 0.5);
-      rightIndex = Math.min(col.length - 1, rightIndex + reservedIndex);
+      rightIndex = Math.min(colX.length - 1, rightIndex + reservedIndex);
       leftIndex = Math.max(0, leftIndex - reservedIndex);
 
       if (!animate) {
@@ -159,7 +162,7 @@
   };
 
   function renderLines(leftIndex, rightIndex) {
-    var i, j;
+    var i, j, col;
 
     for (i = 0; i < colsLength; i++) {
       if (!buttons.views[i].isActive) continue;
@@ -179,28 +182,7 @@
   }
 
   function renderStacked(leftIndex, rightIndex) {
-    var stack = [], i, j, col;
-
-    for (j = leftIndex; j <= rightIndex; j++) {
-      stack[j] = 0;
-    }
-
-    for (i = 0; i < colsLength; i++) {
-      if (!buttons.views[i].isActive) continue;
-
-      for (j = leftIndex; j <= rightIndex; j++) {
-        stack[j] += cols[i][j];
-      }
-    }
-
-    for (j = leftIndex; j <= rightIndex; j++) {
-      mainMaxY = Math.max(mainMaxY, stack[j]);
-    }
-
-    mainMinY = 0;
-    // maximalY = round(maximalY);
-    offsetY = Math.max(1, Math.floor(mainMaxY / steps));
-    scaleY = height / mainMaxY;
+    var i, j, col;
 
     for (i = cols.length - 1; i >= 0; i--) {
       if (!buttons.views[i].isActive) continue;
@@ -237,8 +219,32 @@
     ctx.lineTo(x, y);
   }
 
-  function calcBounds(leftIndex, rightIndex) {
+  function stackedCalcBounds(leftIndex, rightIndex) {
     var i, j;
+    stack.length = 0;
+
+    for (j = leftIndex; j <= rightIndex; j++) {
+      stack[j] = 0;
+    }
+
+    for (i = 0; i < colsLength; i++) {
+      if (!buttons.views[i].isActive) continue;
+
+      for (j = leftIndex; j <= rightIndex; j++) {
+        stack[j] += cols[i][j];
+      }
+    }
+
+    for (j = leftIndex; j <= rightIndex; j++) {
+      mainMaxY = Math.max(mainMaxY, stack[j]);
+    }
+
+    mainMinY = 0;
+    calcBoundsCommon();
+  }
+
+  function linesCalcBounds(leftIndex, rightIndex) {
+    var i, j, col;
     minX = colX[leftIndex];
     maxX = colX[rightIndex];
     mainMinY = Number.MAX_VALUE;
@@ -262,6 +268,11 @@
     }
 
     mainMinY = mainMinY === mainMaxY ? 0 : mainMinY;
+    calcBoundsCommon();
+  }
+
+  function calcBoundsCommon() {
+    var i;
     mainMinY = app.round(mainMinY, 'floor');
     mainOffset = Math.max(1, Math.floor((mainMaxY - mainMinY) / steps));
     mainOffset = app.round(mainOffset, 'ceil');
