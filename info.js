@@ -10,8 +10,8 @@
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   view = new app.E('div');
-  view.sW(diagram.view.width);
-  view.sH(diagram.view.height);
+  view.sW(diagram.view.w);
+  view.sH(diagram.view.h);
   view.sO(0);
   view.sY(0);
   diagram.view.add(view);
@@ -19,7 +19,7 @@
   line = new app.E('div');
   line.sW(2);
   line.sY(20);
-  line.sH(view.h - 18);
+  line.sH(diagram.view.h - 18);
   line.sC('info-line');
   view.add(line);
 
@@ -66,7 +66,7 @@
   app.i.downHandlers.push(function () {
     var localY = chart.getInputY() - diagram.view.y;
 
-    if (localY < 0 || localY > diagram.canvas.height) {
+    if (localY < 0 || localY > diagram.view.h) {
       view.sO(0);
       bgInputEnabled = false;
     }
@@ -88,15 +88,15 @@
       localX = chart.getInputX() - diagram.view.x,
       len, step;
 
-    if (localY < 0 || localY > diagram.canvas.height || localX < 0 || localX > view.w) return;
+    if (localY < 0 || localY > diagram.view.h || localX < 0 || localX > diagram.view.w) return;
 
     len = scrollBar.rightIndex - scrollBar.leftIndex;
-    step = view.w / len;
+    step = diagram.view.w / len;
 
     index = Math.round(localX / step);
     localX = index * step;
 
-    bg.sX(Math.max(0, Math.min(view.w - bg.w, localX - bg.w / 2)));
+    bg.sX(Math.max(0, Math.min(diagram.view.w - bg.w - 2, localX - bg.w / 2)));
     line.sX(localX);
 
     for (var i = 0, n = 0, l = nameEls.length, date, y; i < l; i++) {
@@ -117,7 +117,7 @@
       n++;
     }
 
-    date = new Date(colX[index]);
+    date = new Date(colX[index + 1]);
     mainText.sT(days[date.getUTCDay()] + ', ' + months[date.getUTCMonth()] + ' ' + date.getUTCDate() + ' ' + date.getUTCFullYear());
     bg.sH(30 + n * 20);
   }

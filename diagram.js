@@ -92,7 +92,6 @@
   }
 
   return {
-    canvas: canvas,
     view: view,
     bgColor: '',
 
@@ -111,7 +110,6 @@
 
       for (i = 0; i < canvasesLen; i++) {
         ctx = contexts[i];
-        // ctx.fillStyle = this.bgColor;
         ctx.clearRect(0, 0, canvas.width, height);
       }
 

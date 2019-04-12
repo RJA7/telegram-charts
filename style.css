@@ -26,6 +26,30 @@ body {
     transition: bottom 0.1s ease-out;
 }
 
+.info-line {
+    background-color: rgba(24,45,59,0.1);
+    transition: left 150ms ease-out;
+}
+
+.info-bg {
+    transition: left 150ms ease-out;
+    background-color: #ffffff;
+    border-radius: 10px;
+    border: 2px solid rgba(24,45,59,0.1);
+}
+
+.info-name {
+    /*font-weight: bold;*/
+}
+
+.info-main-text {
+    font-weight: bold;
+}
+
+.info-val {
+    text-align: right;
+}
+
 .axis-x {
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -74,10 +98,6 @@ body {
     /*transition: scale 150ms ease-out;*/
 }
 
-.info-line {
-    background-color: black;
-}
-
 .title {
     font-weight: bold;
 }
@@ -89,24 +109,6 @@ body {
 .range-text {
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.info-bg {
-    background-color: #ffffff;
-    border-radius: 10px;
-    border: 2px solid rgba(24,45,59,0.1);
-}
-
-.info-name {
-    /*font-weight: bold;*/
-}
-
-.info-main-text {
-    font-weight: bold;
-}
-
-.info-val {
-    text-align: right;
 }
 
 i {
