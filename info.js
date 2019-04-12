@@ -8,6 +8,7 @@
     arrow,
     isBar,
     overlayLeft, overlayRight,
+    circleHash = {},
     days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut'],
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -77,12 +78,31 @@
   diagram.view.onDown(function () {
     view.sO(1);
     diagram.overlayLayer.sO(1);
+
     setTimeout(function () {
       bgInputEnabled = true;
       bg.e.style.cursor = 'pointer';
+      render();
     }, 0);
-    render();
   });
+
+  function getCircle(color) {
+    if (circleHash[color]) {
+      return circleHash[color];
+    }
+
+    var circle = new app.E('div');
+    circle.sW(8);
+    circle.sH(8);
+    circle.sX(-6);
+    circle.e.style.backgroundColor = '#ffffff';
+    circle.e.style.border = '2px solid ' + color;
+    circle.e.style.borderRadius = '6px';
+    circleHash[color] = circle;
+    line.add(circle);
+
+    return circle;
+  }
 
   app.i.downHandlers.push(function () {
     var localY = chart.getInputY() - diagram.view.y;
@@ -120,12 +140,12 @@
     index = Math.min(scrollBar.rightIndex - (isBar ? 1 : 0), Math.floor(localX / step));
     localX = index * step;
 
-    bg.e.style.bottom = diagram.view.h - localY + 20 + 'px';
+    bg.e.style.bottom = diagram.view.h - localY + 40 + 'px';
 
-    if (localX < bg.w + 10) {
-      bg.sX(localX + step + 10);
+    if (localX < bg.w + 30) {
+      bg.sX(localX + step + 30);
     } else {
-      bg.sX(localX - bg.w - 10);
+      bg.sX(localX - bg.w - 30);
     }
 
     if (isBar) {
@@ -136,6 +156,11 @@
     } else {
       diagram.overlayLayer.sO(0);
       line.sX(localX);
+
+      for (i = 0; i < buttons.views.length; i++) {
+        var circle = getCircle(buttons.views[i].color);
+        circle.sY(diagram.view.h - diagram.getY(i, scrollBar.leftIndex + index) + circle.x);
+      }
     }
 
     for (var i = 0, n = 0, l = nameEls.length, date, y; i < l; i++) {

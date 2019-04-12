@@ -1,0 +1,1 @@
+uglifyjs axis-x.js buttons.js chart.js diagram.js elem.js h-lines.js header.js info.js input.js main.js scroll-bar.js --compress --mangle --output m.js

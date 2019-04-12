@@ -117,6 +117,10 @@
       init(dat);
     },
 
+    getY: function (colIndex, index) {
+      return (cols[colIndex][index] - minY[colIndex]) * scaleY[colIndex];
+    },
+
     render: function (leftIndex, rightIndex, axisX, axesY) {
       var i, newLeftIndex, newRightIndex;
 
