@@ -30,7 +30,8 @@
 
   hLines = new app.HLines(overview.y_scaled ? 2 : 1);
 
-  diagram = app.Diagram(400, 250, buttons, hLines, true);
+  var Diagram = overview.percentage ? app.DiagramP : app.Diagram;
+  diagram = Diagram(400, 250, buttons, hLines, true);
   diagram.view.sX(0);
   diagram.view.sY(80);
   view.add(diagram.view);
@@ -63,7 +64,7 @@
   function onOverMode() {
     isOverMode = true;
     header.setOver(overview);
-    buttons.setOver(data[0]);
+    buttons.setOver(data[0] || overview);
     scrollBar.setOver(overview);
     diagram.setOver(overview);
     axisX.setOver(overview);

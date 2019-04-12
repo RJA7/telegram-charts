@@ -1,6 +1,6 @@
 body {
     font-family: Helvetica, serif;
-    font-size: 14px;
+    font-size: 12px;
     overflow-x: hidden;
 }
 
@@ -8,16 +8,40 @@ body {
     transform-origin: top left;
 }
 
-.side-day {
+.side {
     background-color: #C0D1E1;
     cursor: grab;
-    transition: all 250ms ease-out;
+}
+
+.side-left {
+    border-radius: 8px 0 0 8px;
+}
+
+.side-right {
+    border-radius: 0 8px 8px 0;
+}
+
+canvas {
+    border-radius: 6px;
+}
+
+.scroll-overlay {
+    background-color: rgba(226,238,249,0.6);
+}
+
+.scroll-overlay-left {
+    border-radius: 6px 0 0 6px;
+}
+
+.scroll-overlay-right {
+    border-radius: 0 6px 6px 0;
 }
 
 .frame {
-    border: 3px solid #C0D1E1;
+    border-top: 2px solid #C0D1E1;
+    border-bottom: 2px solid #C0D1E1;
+    box-sizing: border-box;
     cursor: grab;
-    transition: all 250ms ease-out;
 }
 
 .axis-line {
@@ -46,6 +70,7 @@ body {
 
 .info-main-text {
     font-weight: bold;
+    font-size: 13px;
 }
 
 .info-val {
@@ -59,20 +84,19 @@ body {
 .axis-x {
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: rgba(37,37,41,0.5);
+    color: #8E8E93;
 }
 
 .axis-y {
-    color: rgba(37,37,41,0.5);
+    color: #8E8E93;
 }
 
 .button {
     position: relative!important;
     border-radius: 30px;
-    padding: 8px 4px 8px 12px;
-    margin: 2px 2px;
-    font-weight: bold;
-    font-size: 18px;
+    padding: 8px 6px 8px 12px;
+    margin: 4px 3px;
+    font-size: 14px;
     float: left;
     cursor: pointer;
 }
@@ -82,6 +106,7 @@ body {
     margin-right: 8px;
     margin-left: 2px;
     float: left;
+    color: #ffffff;
 }
 
 .tick {
@@ -110,15 +135,31 @@ body {
 
 .title {
     font-weight: bold;
+    font-size: 18px;
+}
+
+.pointer {
+    cursor: pointer;
 }
 
 .zoom {
     color: #108BE3;
+    top: 1px;
+    position: relative!important;
+    font-size: 17px;
+    margin-left: 6px;
+}
+
+.zoom-icon {
+    width: 20px;
+    float: left;
+    margin-right: 5px;
 }
 
 .range-text {
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-weight: bold;
 }
 
 i {

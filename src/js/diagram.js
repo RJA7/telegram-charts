@@ -1,5 +1,5 @@
 ;app.Diagram = function (width, height, buttons, hLines, addReserve) {
-  var colX, colors, cols, yScaled, stacked, types, draw,
+  var colX, colors, cols, yScaled, stacked, types,
     prevScaleX = 0, prevScaleY = [], prevMaxY = [],
     prevLeftIndex = -1, prevRightIndex, animate, steps = 5, colsLength,
     maxX, minX, scaleX,
@@ -80,7 +80,6 @@
 
     if (stacked) {
       render = renderStacked;
-      draw = dat.percentage ? stackedLines : stackedBars;
       calcBounds = stackedCalcBounds;
     } else {
       render = renderLines;
@@ -209,7 +208,7 @@
   }
 
   function renderStacked(leftIndex, rightIndex) {
-    var i, j, x, offsetX, col;
+    var i, j, x, y, offsetX, col;
     offsetX = (colX[rightIndex] - minX) * scaleX / (rightIndex - leftIndex);
 
     for (i = cols.length - 1; i >= 0; i--) {
@@ -222,7 +221,10 @@
       ctx.moveTo(x, 0);
 
       for (j = leftIndex; j <= rightIndex; j++, x += offsetX) {
-        draw(x, col, stack, j, offsetX);
+        y = (stack[j] - mainMinY) * mainScaleY;
+        stack[j] -= col[j];
+        ctx.lineTo(x, y);
+        ctx.lineTo(x + offsetX, y);
       }
 
       ctx.lineTo(x, 0);
@@ -231,18 +233,6 @@
       ctx.fillStyle = colors[i];
       ctx.fill();
     }
-  }
-
-  function stackedLines(x, col, stack, j) {
-    ctx.lineTo((colX[j] - minX) * scaleX, (stack[j] - mainMinY) * scaleY);
-    stack[j] -= col[j];
-  }
-
-  function stackedBars(x, col, stack, j, offsetX) {
-    var y = (stack[j] - mainMinY) * mainScaleY;
-    stack[j] -= col[j];
-    ctx.lineTo(x, y);
-    ctx.lineTo(x + offsetX, y);
   }
 
   function stackedCalcBounds(leftIndex, rightIndex, newLeftIndex, newRightIndex) {
