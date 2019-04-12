@@ -22,8 +22,6 @@ body {
 
 .axis-line {
     background-color: rgba(24,45,59,0.1);
-    vertical-align: text-bottom;
-    transition: bottom 0.1s ease-out;
 }
 
 .info-line {

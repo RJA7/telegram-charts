@@ -6,7 +6,7 @@
     leftIndex = 0,
     rightIndex = overview.columns[0].length - 2,
     body = document.body,
-    index, view, diagram, axisX, axesY, buttons, header, scrollBar, info, hLines;
+    index, view, diagram, axisX, buttons, header, scrollBar, info, hLines;
 
   var chart = {
     getInputX: function getInputX() {
@@ -27,7 +27,7 @@
   header = app.Header(view, onOverMode);
   buttons = app.Buttons(view, onButtonClick);
 
-  hLines = new app.HLines();
+  hLines = new app.HLines(overview.y_scaled ? 2 : 1);
 
   diagram = app.Diagram(400, 250, buttons, hLines, true);
   diagram.view.sX(0);
@@ -35,8 +35,6 @@
   view.add(diagram.view);
 
   axisX = app.AxisX(diagram.view);
-  axesY = [app.AxisY(diagram.view)];
-  overview.y_scaled && axesY.push(app.AxisY(diagram.view, true));
 
   scrollBar = app.ScrollBar(chart, buttons, onRangeChange);
   view.add(scrollBar.view);
@@ -48,12 +46,12 @@
 
   function onButtonClick() {
     scrollBar.renderDiagram();
-    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX, axesY);
+    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX);
   }
 
   function onRangeChange() {
     header.setRange(scrollBar.leftIndex, scrollBar.rightIndex);
-    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX, axesY);
+    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX);
   }
 
   function onDayMode() {

@@ -119,6 +119,7 @@
       if (mainMinY === Number.MAX_VALUE) return;
 
       axisX && axisX.render(leftIndex, rightIndex, scaleX);
+      hLines && hLines.render(minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffset, axesY);
 
       var reservedIndex = Math.ceil((rightIndex - leftIndex) * 0.5);
       rightIndex = Math.min(col.length - 1, rightIndex + reservedIndex);
@@ -154,19 +155,6 @@
       maxX = colX[rightIndex];
 
       render(leftIndex, rightIndex);
-
-
-      // hLines && hLines.render(minimalY, scaleY, offsetY);
-      //
-      // if (axesY) {
-      //   if (yScaled) {
-      //     for (i = 0, l = axesY.length; i < l; i++) {
-      //       axesY[i].render(minimalsY[i], scalesY[i], offsetsY[i]);
-      //     }
-      //   } else {
-      //     axesY[0].render(minimalY, scaleY, offsetY);
-      //   }
-      // }
     }
   };
 
@@ -274,7 +262,10 @@
     }
 
     mainMinY = mainMinY === mainMaxY ? 0 : mainMinY;
+    mainMinY = round(mainMinY, 'floor');
     mainOffset = Math.max(1, Math.floor((mainMaxY - mainMinY) / steps));
+    mainOffset = round(mainOffset, 'ceil');
+    mainMaxY = mainMinY + mainOffset * steps;
     mainScaleY = height / (mainMaxY - mainMinY);
 
     if (yScaled) {
@@ -291,8 +282,8 @@
   }
 };
 
-function round(num) {
-  var l = String(num).length - 2;
+function round(num, func) {
+  var l = String(num).length - 1;
   var n = '1';
 
   for (var i = 0; i < l; i++) {
@@ -300,5 +291,5 @@ function round(num) {
   }
 
   n = Number(n);
-  return Math.ceil(num / n) * n;
+  return Math[func](num / n) * n;
 }

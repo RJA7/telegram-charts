@@ -28,6 +28,10 @@
     return this.y;
   };
 
+  p.sB = function (bottom) {
+    this.e.style.bottom = bottom + 'px';
+  };
+
   p.sY = function (y) {
     this.y = y;
     this.e.style.top = y + 'px';

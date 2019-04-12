@@ -113,7 +113,7 @@
       valueEls[i].sY(y);
       nameEls[i].sT(buttons.views[i].name);
       valueEls[i].e.style.color = buttons.views[i].color;
-      valueEls[i].sT(formatNumber(cols[i][index + 1], true));
+      valueEls[i].sT(app.formatNumber(cols[i][index + 1], true));
       n++;
     }
 
