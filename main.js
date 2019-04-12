@@ -20,11 +20,10 @@
   function onResize() {
     var offset = 20;
     var sc = (window.innerWidth - offset * 2) / 400;
-    var x = offset * sc;
 
     for (var i = 0; i < 1; i++) {
       chart = charts[i];
-      chart.view.sX(x);
+      chart.view.sX(offset);
       chart.view.sY((20 + 560 * i) * sc);
       chart.view.sS(sc, sc);
       chart.view.sc = sc;

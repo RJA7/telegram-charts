@@ -58,6 +58,16 @@
     colsLength = cols.length;
   }
 
+  function startAnimation() {
+    animate = false;
+
+    canvas.style.width = canvasReserveX * 2 + width + 'px';
+    canvas.style.height = canvas.height + 'px';
+    canvas.style.top = 0 + 'px';
+    canvas.style.left = 0 + 'px';
+    canvas.classList.add('tween');
+  }
+
   return {
     canvas: canvas,
     view: view,
@@ -69,18 +79,6 @@
 
     setDat: function (dat) {
       reset(dat);
-    },
-
-    update: function () {
-      if (animate) {
-        animate = false;
-
-        canvas.style.width = canvasReserveX * 2 + width + 'px';
-        canvas.style.height = canvas.height + 'px';
-        canvas.style.top = 0 + 'px';
-        canvas.style.left = 0 + 'px';
-        canvas.classList.add('tween');
-      }
     },
 
     render: function (leftIndex, rightIndex, axisX, axesY) {
@@ -117,11 +115,13 @@
       if (!animate) {
         animate = true;
 
-        canvas.style.top = ((prevMinY - minimalY) - (maximalY - prevMaxY)) * prevScaleY + 'px';
+        canvas.style.top = (-(maximalY - prevMaxY)) * prevScaleY + 'px';
         canvas.style.height = (parseInt(canvas.style.height)) * prevScaleY / scaleY + 'px';
 
         canvas.style.width = (parseInt(canvas.style.width)) * prevScaleX / scaleX + 'px';
         canvas.classList.remove('tween');
+
+        setTimeout(startAnimation, 0);
       }
 
       var canvasContainerX = canvasContainer.x;

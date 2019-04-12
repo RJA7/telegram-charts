@@ -93,7 +93,7 @@
     view: view,
 
     update: function () {
-      diagram.update();
+
     }
   };
 };
