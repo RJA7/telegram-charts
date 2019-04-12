@@ -84,11 +84,14 @@
   function startAnimation() {
     animate = false;
 
-    canvas.style.width = canvasReserveX * 2 + width + 'px';
-    canvas.style.height = canvas.height + 'px';
-    canvas.style.top = 0 + 'px';
-    canvas.style.left = 0 + 'px';
-    canvas.classList.add('tween');
+    for (var i = 0; i < canvasesLen; i++) {
+      canvas = canvases[i];
+      canvas.style.width = canvasReserveX * 2 + width + 'px';
+      canvas.style.height = canvas.height + 'px';
+      canvas.style.top = 0 + 'px';
+      canvas.style.left = 0 + 'px';
+      canvas.classList.add('tween');
+    }
   }
 
   return {
@@ -137,11 +140,11 @@
           var canvasContainerX = canvasContainer.x;
           canvasContainer.sX((colX[leftIndex] - minX) * scaleX);
           canvas.style.left = canvasContainerX - canvasContainer.x + (colX[leftIndex] - colX[prevLeftIndex]) * prevScaleX + 'px';
-
-          setTimeout(startAnimation, 0);
           prevScaleY[i] = scaleY[i];
           prevMaxY[i] = maxY[i];
         }
+
+        setTimeout(startAnimation, 0);
       }
 
       prevScaleX = scaleX;
@@ -276,7 +279,7 @@
 
     if (yScaled) {
       for (i = 0; i < colsLength; i++) {
-        scaleY[i] = mainScaleY * offsetY[i] / mainOffset;
+        scaleY[i] = mainScaleY * mainOffset / offsetY[i];
       }
     } else {
       for (i = 0; i < colsLength; i++) {
