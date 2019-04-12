@@ -1,4 +1,4 @@
-;app.ScrollBar = function (chart, buttons, cb) {
+;app.ScrollBar = function (chart, buttons, isSingle, cb) {
   var Elem = app.E,
     offsetTB = 3,
     sideWidth = 20,
@@ -48,7 +48,7 @@
     var colX = dat.columns[0], i, l;
 
     for (i = 2, l = colX.length - 1; i < l; i++) {
-      if (checkCb(new Date(colX[i]))) {
+      if (checkCb(new Date(colX[i]), i)) {
         anchorsX.push((i - 1) / (l - 2) * width);
         anchorsMap.push(i - 1);
       }
@@ -81,9 +81,15 @@
       totalDays = dat.columns[0].length - 2;
       diagram.setDat(dat);
 
-      updateAnchors(dat, function (date) {
-        return date.getUTCHours() === 0;
-      });
+      if (isSingle) {
+        updateAnchors(dat, function (date, i) {
+          return i % 36 === 1;
+        });
+      } else {
+        updateAnchors(dat, function (date) {
+          return date.getUTCHours() === 0;
+        });
+      }
     },
 
     renderDiagram: function render() {

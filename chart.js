@@ -1,9 +1,10 @@
-;app.Chart = function (contest) {
+;app.Chart = function (contest, chartIndex) {
   var Elem = app.E,
     input = app.i,
     overview = contest.overview,
     data = contest.data,
     leftIndex = 0,
+    isSingle = chartIndex === 3,
     rightIndex = Math.min(90, overview.columns[0].length - 2),
     body = document.body,
     index, view, diagram, axisX, buttons, header, scrollBar, info, hLines, isOverMode;
@@ -25,7 +26,7 @@
   view.sC('chart');
 
   header = app.Header(view, onOverMode);
-  buttons = app.Buttons(view, onButtonClick);
+  buttons = app.Buttons(view, isSingle, onButtonClick);
 
   hLines = new app.HLines(overview.y_scaled ? 2 : 1);
 
@@ -36,10 +37,10 @@
 
   axisX = app.AxisX(diagram.view);
 
-  scrollBar = app.ScrollBar(chart, buttons, onRangeChange);
+  scrollBar = app.ScrollBar(chart, buttons, isSingle, onRangeChange);
   view.add(scrollBar.view);
 
-  info = app.Info(chart, diagram, scrollBar, buttons, overview.types.y0 === 'bar', onDatMode);
+  info = app.Info(chart, diagram, scrollBar, buttons, isSingle, onDatMode);
 
   onDayMode();
   onOverMode();
@@ -62,7 +63,7 @@
   function onOverMode() {
     isOverMode = true;
     header.setOver(overview);
-    buttons.setOver(overview);
+    buttons.setOver(data[0]);
     scrollBar.setOver(overview);
     diagram.setOver(overview);
     axisX.setOver(overview);

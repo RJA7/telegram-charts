@@ -25,6 +25,7 @@
   var overlayLayer = new app.E('div');
   overlayLayer.sW(view.w);
   overlayLayer.sH(view.h);
+  overlayLayer.sO(0);
   view.add(overlayLayer);
 
   hLines && hLines.addTo(view);
@@ -189,7 +190,7 @@
     for (i = 0; i < colsLength; i++) {
       if (!buttons.views[i].isActive) continue;
       col = cols[i];
-      ctx = contexts[i];
+      ctx = contexts[i] || contexts[0];
 
       ctx.beginPath();
       ctx.moveTo((colX[leftIndex] - minX) * scaleX, (col[leftIndex] - minY[i]) * scaleY[i]);

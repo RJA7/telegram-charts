@@ -2,7 +2,7 @@
   var chart, charts = [];
 
   for (var i = 3; i < 4; i++) {
-    chart = app.Chart(app.contest[i]);
+    chart = app.Chart(app.contest[i], i);
     charts.push(chart);
   }
 

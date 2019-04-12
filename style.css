@@ -30,7 +30,7 @@ body {
 
 .info-line {
     background-color: rgba(24,45,59,0.1);
-    transition: left 150ms ease-out;
+    /*transition: left 150ms ease-out;*/
 }
 
 .info-bg {

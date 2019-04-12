@@ -1,4 +1,4 @@
-;app.Info = function (chart, diagram, scrollBar, buttons, isBar, cb) {
+;app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
   var index = 0,
     bgInputEnabled = false,
     nameEls = [],
@@ -6,6 +6,7 @@
     view, line, bg, colX, cols,
     mainText,
     arrow,
+    isBar,
     overlayLeft, overlayRight,
     days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut'],
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -18,25 +19,25 @@
   view.sY(0);
   diagram.view.add(view);
 
-  if (isBar) {
-    overlayLeft = new app.E('div');
-    overlayLeft.sH(diagram.view.h);
-    overlayLeft.sC('info-overlay');
-    diagram.overlayLayer.add(overlayLeft);
+  overlayLeft = new app.E('div');
+  overlayLeft.sW(0);
+  overlayLeft.sH(diagram.view.h);
+  overlayLeft.sC('info-overlay');
+  diagram.overlayLayer.add(overlayLeft);
 
-    overlayRight = new app.E('div');
-    overlayRight.sH(diagram.view.h);
-    overlayRight.e.style.right = 0 + 'px';
-    overlayRight.sC('info-overlay');
-    diagram.overlayLayer.add(overlayRight);
-  } else {
-    line = new app.E('div');
-    line.sW(2);
-    line.sY(0);
-    line.sH(diagram.view.h);
-    line.sC('info-line');
-    view.add(line);
-  }
+  overlayRight = new app.E('div');
+  overlayRight.sW(0);
+  overlayRight.sH(diagram.view.h);
+  overlayRight.e.style.right = 0 + 'px';
+  overlayRight.sC('info-overlay');
+  diagram.overlayLayer.add(overlayRight);
+
+  line = new app.E('div');
+  line.sW(2);
+  line.sY(0);
+  line.sH(diagram.view.h);
+  line.sC('info-line');
+  view.add(line);
 
   bg = new app.E('div');
   bg.sC('info-bg');
@@ -76,7 +77,10 @@
   diagram.view.onDown(function () {
     view.sO(1);
     diagram.overlayLayer.sO(1);
-    bgInputEnabled = true;
+    setTimeout(function () {
+      bgInputEnabled = true;
+      bg.e.style.cursor = 'pointer';
+    }, 0);
     render();
   });
 
@@ -87,6 +91,7 @@
       view.sO(0);
       diagram.overlayLayer.sO(0);
       bgInputEnabled = false;
+      bg.e.style.cursor = 'default';
     }
   });
 
@@ -95,6 +100,7 @@
   });
 
   function onBgClick(e) {
+    if (!bgInputEnabled) return;
     e.preventDefault();
     e.stopPropagation();
 
@@ -106,12 +112,12 @@
       localX = chart.getInputX() - diagram.view.x,
       len, step;
 
-    if (localY < 0 || localY > diagram.view.h || localX < 0 || localX > diagram.view.w) return;
-
     len = scrollBar.rightIndex - scrollBar.leftIndex;
     step = diagram.view.w / len;
 
-    index = Math.min(scrollBar.rightIndex - 1, Math.floor(localX / step));
+    if (localY < 0 || localY > diagram.view.h || localX < 0 || localX > diagram.view.w + step) return;
+
+    index = Math.min(scrollBar.rightIndex - (isBar ? 1 : 0), Math.floor(localX / step));
     localX = index * step;
 
     bg.e.style.bottom = diagram.view.h - localY + 20 + 'px';
@@ -122,11 +128,14 @@
       bg.sX(localX - bg.w - 10);
     }
 
-    if (line) {
-      line.sX(localX);
-    } else {
+    if (isBar) {
       overlayLeft.sW(Math.min(diagram.view.w - Math.max(3, step), localX));
       overlayRight.sW(Math.max(0, diagram.view.w - localX - Math.max(3, step)));
+      diagram.overlayLayer.sO(1);
+      line.sX(100500);
+    } else {
+      diagram.overlayLayer.sO(0);
+      line.sX(localX);
     }
 
     for (var i = 0, n = 0, l = nameEls.length, date, y; i < l; i++) {
@@ -152,17 +161,23 @@
     bg.sH(30 + n * 20);
   }
 
+  function reset(dat) {
+    colX = dat.columns[0];
+    cols = dat.columns.slice(1);
+    setTimeout(render, 0);
+  }
+
   return {
     setOver: function (overview) {
-      colX = overview.columns[0];
-      cols = overview.columns.slice(1);
-      setTimeout(render, 0);
+      reset(overview);
+      isBar = overview.types.y0 === 'bar';
+      arrow.style.visibility = 'visible';
     },
 
     setDat: function (dat) {
-      colX = dat.columns[0];
-      cols = dat.columns.slice(1);
-      setTimeout(render, 0);
+      reset(dat);
+      isBar = dat.types.y0 === 'bar' && !isSingle;
+      arrow.style.visibility = 'hidden';
     }
   }
 };

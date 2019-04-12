@@ -1,24 +1,12 @@
-;app.Buttons = function (parent, cb) {
-  var buttons, self;
+;app.Buttons = function (parent, isSingle, cb) {
+  var buttons, view;
 
-  self = {
-    setOver: function (overview) {
-      !buttons && reset(overview);
-    },
+  view = new app.E('div');
+  view.sY(450);
+  parent.add(view);
 
-    setDat: function (dat) {
-
-    },
-
-    views: null
-  };
-
-  function reset(dat) {
+  function init(dat) {
     var names = [], colors = [];
-
-    if (buttons) {
-      // todo destroy or reuse
-    }
 
     dat.columns.slice(1).forEach(function (col) {
       names.push(dat.names[col[0]]);
@@ -31,11 +19,9 @@
       button = new app.E('div');
       button.name = name;
       button.color = colors[i];
-      button.sX(0);
-      button.sY(450);
       button.e.style.backgroundColor = colors[i];
       button.sC('button');
-      parent.add(button);
+      view.add(button);
 
       tick = new app.E('img');
       tick.e.src = 'img/tick.png';
@@ -50,6 +36,7 @@
 
       button.isActive = true;
       button.tick = tick;
+      button.text = text;
 
       function turnOffAllBeside(btn) {
         var i, s, l;
@@ -57,7 +44,7 @@
 
         for (i = 0, l = buttons.length; i < l; i++) {
           btn = buttons[i];
-          btn.isActive = btn === button
+          btn.isActive = btn === button;
           s = btn.isActive ? 1 : 0;
           btn.tick.sS(s, s);
         }
@@ -88,9 +75,32 @@
 
       return button;
     });
-
-    self.views = buttons;
   }
 
-  return self;
+  return {
+    setOver: function (dat) {
+      !buttons && init(dat);
+
+      if (isSingle) {
+        this.views = [{isActive: true, name: dat.names.y0}];
+        view.sO(0);
+      } else {
+        this.views = buttons;
+      }
+    },
+
+    setDat: function (dat) {
+      view.sO(1);
+      this.views = buttons;
+
+      if (isSingle) {
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].name = dat.names[dat.columns[i + 1][0]];
+          buttons[i].text.sT(buttons[i].name);
+        }
+      }
+    },
+
+    views: null
+  };
 };
