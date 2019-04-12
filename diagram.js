@@ -1,7 +1,7 @@
 ;app.Diagram = function (width, height, buttons, hLines, addReserve) {
   var colX, colors, cols, yScaled, stacked, types, draw,
     prevScaleX = 0, prevScaleY = [], prevMaxY = [],
-    prevLeftIndex = -1, animate, steps = 5, colsLength,
+    prevLeftIndex = -1, prevRightIndex, animate, steps = 5, colsLength,
     maxX, minX, scaleX,
     mainMinY = Number.MAX_VALUE,
     mainMaxY = -Number.MAX_VALUE,
@@ -10,7 +10,7 @@
     mainOffset, mainScaleY,
     stack = [],
     calcBounds,
-    canvasReserveX = addReserve ? 280 : 0;
+    canvasReserveX = addReserve ? 400 : 0;
 
   var view = new app.E('div');
   view.sW(width);
@@ -21,6 +21,11 @@
   overflow.sW(width);
   overflow.sH(height);
   view.add(overflow);
+
+  var overlayLayer = new app.E('div');
+  overlayLayer.sW(view.w);
+  overlayLayer.sH(view.h);
+  view.add(overlayLayer);
 
   hLines && hLines.addTo(view);
 
@@ -60,7 +65,7 @@
     colX = dat.columns[0].slice(1);
     types = dat.types;
     yScaled = dat.y_scaled;
-    stacked = dat.stacked/* || types.y0 === 'bar'*/;
+    stacked = dat.stacked || types.y0 === 'bar';
     colors = [];
 
     cols = dat.columns.slice(1).map(function (col) {
@@ -101,6 +106,7 @@
   return {
     view: view,
     bgColor: '#ffffff',
+    overlayLayer: overlayLayer,
 
     setOver: function (overview) {
       init(overview);
@@ -113,9 +119,22 @@
     render: function (leftIndex, rightIndex, axisX, axesY) {
       var i, newLeftIndex, newRightIndex;
 
-      var reservedIndex = Math.ceil((rightIndex - leftIndex) * 1.2);
-      newRightIndex = Math.min(colX.length - 1, rightIndex + reservedIndex);
-      newLeftIndex = Math.max(0, leftIndex - reservedIndex);
+      var reservedIndex = Math.ceil((rightIndex - leftIndex));
+      var reserveLeft, reserveRight;
+
+      if (leftIndex !== prevLeftIndex && rightIndex !== prevRightIndex) {
+        reserveLeft = 1;
+        reserveRight = 1;
+      } else if (leftIndex !== prevLeftIndex) {
+        reserveLeft = 2;
+        reserveRight = 0;
+      } else {
+        reserveLeft = 0;
+        reserveRight = 2;
+      }
+
+      newLeftIndex = Math.max(0, leftIndex - Math.floor(reservedIndex * reserveLeft));
+      newRightIndex = Math.min(colX.length - 1, rightIndex + Math.floor(reservedIndex * reserveRight));
 
       calcBounds(leftIndex, rightIndex, newLeftIndex, newRightIndex);
 
@@ -127,9 +146,6 @@
 
       axisX && axisX.render(leftIndex, rightIndex, scaleX);
       hLines && hLines.render(minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffset, axesY);
-
-      leftIndex = newLeftIndex;
-      rightIndex = newRightIndex;
 
       if (!animate) {
         animate = true;
@@ -145,8 +161,10 @@
           canvas.classList.remove('tween');
 
           var canvasContainerX = canvasContainer.x;
-          canvasContainer.sX((colX[leftIndex] - minX) * scaleX);
-          canvas.style.left = canvasContainerX - canvasContainer.x + (colX[leftIndex] - colX[prevLeftIndex]) * prevScaleX + 'px';
+          canvasContainer.sX((colX[newLeftIndex] - minX) * scaleX);
+          canvas.style.left = canvasContainerX - canvasContainer.x +
+            (colX[newLeftIndex] - colX[prevLeftIndex]) * prevScaleX + 'px';
+
           prevScaleY[i] = scaleY[i];
           prevMaxY[i] = maxY[i];
         }
@@ -155,12 +173,13 @@
       }
 
       prevScaleX = scaleX;
-      prevLeftIndex = leftIndex;
+      prevLeftIndex = newLeftIndex;
+      prevRightIndex = newRightIndex;
 
-      minX = colX[leftIndex];
-      maxX = colX[rightIndex];
+      minX = colX[newLeftIndex];
+      maxX = colX[newRightIndex];
 
-      render(leftIndex, rightIndex);
+      render(newLeftIndex, newRightIndex);
     }
   };
 

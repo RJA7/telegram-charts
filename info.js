@@ -22,15 +22,13 @@
     overlayLeft = new app.E('div');
     overlayLeft.sH(diagram.view.h);
     overlayLeft.sC('info-overlay');
-    overlayLeft.sC('tween');
-    view.add(overlayLeft);
+    diagram.overlayLayer.add(overlayLeft);
 
     overlayRight = new app.E('div');
     overlayRight.sH(diagram.view.h);
     overlayRight.e.style.right = 0 + 'px';
     overlayRight.sC('info-overlay');
-    overlayRight.sC('tween');
-    view.add(overlayRight);
+    diagram.overlayLayer.add(overlayRight);
   } else {
     line = new app.E('div');
     line.sW(2);
@@ -42,7 +40,6 @@
 
   bg = new app.E('div');
   bg.sC('info-bg');
-  bg.sY(-40);
   bg.sW(160);
   bg.sH(60);
   bg.onDown(onBgClick);
@@ -78,6 +75,7 @@
 
   diagram.view.onDown(function () {
     view.sO(1);
+    diagram.overlayLayer.sO(1);
     bgInputEnabled = true;
     render();
   });
@@ -87,6 +85,7 @@
 
     if (localY < 0 || localY > diagram.view.h) {
       view.sO(0);
+      diagram.overlayLayer.sO(0);
       bgInputEnabled = false;
     }
   });
@@ -114,6 +113,8 @@
 
     index = Math.min(scrollBar.rightIndex - 1, Math.floor(localX / step));
     localX = index * step;
+
+    bg.e.style.bottom = diagram.view.h - localY + 20 + 'px';
 
     if (localX < bg.w + 10) {
       bg.sX(localX + step + 10);
