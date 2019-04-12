@@ -3,11 +3,11 @@
 
   for (var i = 0; i < 1; i++) {
     chart = app.Chart(app.contest[i]);
-    chart.view.sX(30 + 100);
-    chart.view.sY(20 + 560 * i);
-    chart.view.e.style.margin = 'auto';
     charts.push(chart);
   }
+
+  onResize();
+  window.addEventListener('resize', onResize);
 
   (function update() {
     requestAnimationFrame(update);
@@ -16,4 +16,19 @@
       charts[i].update();
     }
   }());
+
+  function onResize() {
+    var offset = 20;
+    var sc = (window.innerWidth - offset * 2) / 400;
+    var x = offset * sc;
+
+    for (var i = 0; i < 1; i++) {
+      chart = charts[i];
+      chart.view.sX(x);
+      chart.view.sY((20 + 560 * i) * sc);
+      chart.view.sS(sc, sc);
+      chart.view.sc = sc;
+      charts.push(chart);
+    }
+  }
 });

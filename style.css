@@ -1,18 +1,23 @@
 body {
     font-family: Helvetica, serif;
     font-size: 14px;
+    overflow-x: hidden;
+}
+
+.chart {
+    transform-origin: top left;
 }
 
 .side-day {
     background-color: #C0D1E1;
     cursor: grab;
-    transition: all 0.1s ease-out;
+    transition: all 250ms ease-out;
 }
 
 .frame {
     border: 3px solid #C0D1E1;
     cursor: grab;
-    transition: all 0.1s ease-out;
+    transition: all 250ms ease-out;
 }
 
 .axis-line {
@@ -25,19 +30,10 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     color: rgba(37,37,41,0.5);
-    transition: left 0.2s ease-out;
 }
 
 .axis-y {
     color: rgba(37,37,41,0.5);
-}
-
-.tw {
-    transition: all 0.1s ease-out;
-}
-
-.tw-o {
-    transition: opacity 0.1s ease-out;
 }
 
 .button {
@@ -67,11 +63,11 @@ body {
 }
 
 .tween {
-    transition: all 500ms ease-out;
+    transition: all 200ms ease-out;
 }
 
 .tween-alpha {
-    transition: opacity 150ms ease-out;
+    transition: opacity 200ms ease-out;
 }
 
 .tween-scale {

@@ -1,7 +1,7 @@
 ;app.ScrollBar = function (chart, buttons, cb) {
   var Elem = app.E,
     offsetTB = 3,
-    sideWidth = 14,
+    sideWidth = 20,
     width = 400,
     height = 50,
     moveHandler = empty,

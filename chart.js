@@ -10,11 +10,11 @@
 
   var chart = {
     getInputX: function getInputX() {
-      return input.x - view.e.offsetLeft + app.getScrollX();
+      return (input.x - view.e.offsetLeft) / view.sc + app.getScrollX();
     },
 
     getInputY: function () {
-      return input.y - view.e.offsetTop + app.getscrollY();
+      return (input.y - view.e.offsetTop) / view.sc + app.getscrollY();
     }
   };
 
@@ -22,6 +22,7 @@
   body.appendChild(view.e);
   view.sW(400);
   view.sH(540);
+  view.sC('chart');
 
   header = app.Header(view, onOverMode);
   buttons = app.Buttons(view, onButtonClick);

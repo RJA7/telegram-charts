@@ -117,7 +117,7 @@
       if (!animate) {
         animate = true;
 
-        canvas.style.top = ((prevMinY - minimalY) - (maximalY - prevMaxY) - 0.5) * prevScaleY + 'px';
+        canvas.style.top = ((prevMinY - minimalY) - (maximalY - prevMaxY)) * prevScaleY + 'px';
         canvas.style.height = (parseInt(canvas.style.height)) * prevScaleY / scaleY + 'px';
 
         canvas.style.width = (parseInt(canvas.style.width)) * prevScaleX / scaleX + 'px';

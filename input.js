@@ -39,7 +39,7 @@
 
   function onTouchEnd(e) {
     e.preventDefault();
-    onMouseUp();
+    onMouseUp(e);
   }
 
   function onMouseMove(e) {
