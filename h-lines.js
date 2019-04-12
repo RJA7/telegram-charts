@@ -4,10 +4,17 @@ app.HLines = function (axesLen) {
   var view = new app.E('div');
   view.sY(250);
 
+  var mainLine = new app.E('div');
+  mainLine.sW(400);
+  mainLine.sH(3);
+  mainLine.sY(-1);
+  mainLine.sC('main-line');
+  view.add(mainLine);
+
   function createLine() {
     var line = new app.E('div');
     line.sW(400);
-    line.sH(1);
+    line.sH(2);
     line.sC('axis-line');
     line.texts = [];
     view.add(line);
@@ -86,7 +93,7 @@ app.HLines = function (axesLen) {
 
         for (j = 0; j < axesLen; j++) {
           text = line.texts[j];
-          text.sT(format(minY[j] + offsetY[j] * i));
+          text.sT(app.format(minY[j] + offsetY[j] * i));
         }
 
         hash[line.index] = line;
@@ -107,22 +114,3 @@ app.HLines = function (axesLen) {
     }
   }
 };
-
-function format(number) {
-  if (number === 0) return 0;
-
-  var s = '';
-
-  if (number > 1000000000) {
-    number *= 0.000000001;
-    s = 'B';
-  } else if (number > 1000000) {
-    number *= 0.000001;
-    s = 'M';
-  } else if (number > 1000) {
-    number *= 0.001;
-    s = 'K';
-  }
-
-  return number.toFixed(number > 100 ? 0 : number > 10 ? 1 : 2) + s;
-}

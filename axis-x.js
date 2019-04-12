@@ -11,6 +11,7 @@
     var elem = new app.E('div');
     elem.sT(0);
     elem.sW(50);
+    elem.sY(6);
     parent.add(elem);
 
     return elem;

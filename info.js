@@ -1,4 +1,4 @@
-;app.Info = function (chart, diagram, scrollBar, buttons, cb) {
+;app.Info = function (chart, diagram, scrollBar, buttons, isBar, cb) {
   var index = 0,
     bgInputEnabled = false,
     nameEls = [],
@@ -6,26 +6,43 @@
     view, line, bg, colX, cols,
     mainText,
     arrow,
+    overlayLeft, overlayRight,
     days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut'],
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   view = new app.E('div');
+  view.sC('tween');
   view.sW(diagram.view.w);
   view.sH(diagram.view.h);
   view.sO(0);
   view.sY(0);
   diagram.view.add(view);
 
-  line = new app.E('div');
-  line.sW(2);
-  line.sY(20);
-  line.sH(diagram.view.h - 18);
-  line.sC('info-line');
-  view.add(line);
+  if (isBar) {
+    overlayLeft = new app.E('div');
+    overlayLeft.sH(diagram.view.h);
+    overlayLeft.sC('info-overlay');
+    overlayLeft.sC('tween');
+    view.add(overlayLeft);
+
+    overlayRight = new app.E('div');
+    overlayRight.sH(diagram.view.h);
+    overlayRight.e.style.right = 0 + 'px';
+    overlayRight.sC('info-overlay');
+    overlayRight.sC('tween');
+    view.add(overlayRight);
+  } else {
+    line = new app.E('div');
+    line.sW(2);
+    line.sY(0);
+    line.sH(diagram.view.h);
+    line.sC('info-line');
+    view.add(line);
+  }
 
   bg = new app.E('div');
   bg.sC('info-bg');
-  bg.sY(0);
+  bg.sY(-40);
   bg.sW(160);
   bg.sH(60);
   bg.onDown(onBgClick);
@@ -54,6 +71,7 @@
     var valueEl = new app.E('div');
     valueEl.sX(110);
     valueEl.sC('info-val');
+    valueEl.e.style.right = 10 + 'px';
     bg.add(valueEl);
     valueEls.push(valueEl);
   }
@@ -61,6 +79,7 @@
   diagram.view.onDown(function () {
     view.sO(1);
     bgInputEnabled = true;
+    render();
   });
 
   app.i.downHandlers.push(function () {
@@ -72,8 +91,8 @@
     }
   });
 
-  app.i.moveHandlers.push(function onMouseMove() {
-    render();
+  app.i.moveHandlers.push(function onMouseMove(input) {
+    input.isDown && render();
   });
 
   function onBgClick(e) {
@@ -93,11 +112,21 @@
     len = scrollBar.rightIndex - scrollBar.leftIndex;
     step = diagram.view.w / len;
 
-    index = Math.round(localX / step);
+    index = Math.min(scrollBar.rightIndex - 1, Math.floor(localX / step));
     localX = index * step;
 
-    bg.sX(Math.max(0, Math.min(diagram.view.w - bg.w - 2, localX - bg.w / 2)));
-    line.sX(localX);
+    if (localX < bg.w + 10) {
+      bg.sX(localX + step + 10);
+    } else {
+      bg.sX(localX - bg.w - 10);
+    }
+
+    if (line) {
+      line.sX(localX);
+    } else {
+      overlayLeft.sW(Math.min(diagram.view.w - Math.max(3, step), localX));
+      overlayRight.sW(Math.max(0, diagram.view.w - localX - Math.max(3, step)));
+    }
 
     for (var i = 0, n = 0, l = nameEls.length, date, y; i < l; i++) {
       if (!buttons.views[i] || !buttons.views[i].isActive) {
@@ -113,11 +142,11 @@
       valueEls[i].sY(y);
       nameEls[i].sT(buttons.views[i].name);
       valueEls[i].e.style.color = buttons.views[i].color;
-      valueEls[i].sT(app.formatNumber(cols[i][index + 1], true));
+      valueEls[i].sT(app.format(cols[i][index + 1], true));
       n++;
     }
 
-    date = new Date(colX[index + 1]);
+    date = new Date(colX[scrollBar.leftIndex + index + 1]);
     mainText.sT(days[date.getUTCDay()] + ', ' + months[date.getUTCMonth()] + ' ' + date.getUTCDate() + ' ' + date.getUTCFullYear());
     bg.sH(30 + n * 20);
   }
@@ -126,11 +155,13 @@
     setOver: function (overview) {
       colX = overview.columns[0];
       cols = overview.columns.slice(1);
+      setTimeout(render, 0);
     },
 
     setDat: function (dat) {
       colX = dat.columns[0];
       cols = dat.columns.slice(1);
+      setTimeout(render, 0);
     }
   }
 };

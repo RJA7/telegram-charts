@@ -24,6 +24,10 @@ body {
     background-color: rgba(24,45,59,0.1);
 }
 
+.main-line {
+    background-color: rgba(24,45,59,0.6);
+}
+
 .info-line {
     background-color: rgba(24,45,59,0.1);
     transition: left 150ms ease-out;
@@ -46,6 +50,10 @@ body {
 
 .info-val {
     text-align: right;
+}
+
+.info-overlay {
+    background-color: rgba(255, 255, 255, 0.4);
 }
 
 .axis-x {
@@ -85,7 +93,11 @@ body {
 }
 
 .tween {
-    transition: all 200ms ease-out;
+    -webkit-transition: all 160ms ease-out;
+    -moz-transition: all 160ms ease-out;
+    -ms-transition: all 160ms ease-out;
+    -o-transition: all 160ms ease-out;
+    transition: all 160ms ease-out;
 }
 
 .tween-alpha {

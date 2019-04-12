@@ -4,9 +4,9 @@
     overview = contest.overview,
     data = contest.data,
     leftIndex = 0,
-    rightIndex = overview.columns[0].length - 2,
+    rightIndex = Math.min(90, overview.columns[0].length - 2),
     body = document.body,
-    index, view, diagram, axisX, buttons, header, scrollBar, info, hLines;
+    index, view, diagram, axisX, buttons, header, scrollBar, info, hLines, isOverMode;
 
   var chart = {
     getInputX: function getInputX() {
@@ -39,7 +39,7 @@
   scrollBar = app.ScrollBar(chart, buttons, onRangeChange);
   view.add(scrollBar.view);
 
-  info = app.Info(chart, diagram, scrollBar, buttons, onDatMode);
+  info = app.Info(chart, diagram, scrollBar, buttons, overview.types.y0 === 'bar', onDatMode);
 
   onDayMode();
   onOverMode();
@@ -60,6 +60,7 @@
   }
 
   function onOverMode() {
+    isOverMode = true;
     header.setOver(overview);
     buttons.setOver(overview);
     scrollBar.setOver(overview);
@@ -72,6 +73,9 @@
   }
 
   function onDatMode(i) {
+    if (!isOverMode) return;
+    isOverMode = false;
+
     var dat = data[i];
     leftIndex = scrollBar.leftIndex;
     rightIndex = scrollBar.rightIndex;
@@ -85,7 +89,7 @@
     axisX.setDat(dat);
     hLines.setDat(dat);
     info.setDat(dat);
-    scrollBar.setRange(0, dat.columns[0].length - 2);
+    scrollBar.setRange(0, Math.min(36, dat.columns[0].length - 2));
     scrollBar.renderDiagram();
   }
 

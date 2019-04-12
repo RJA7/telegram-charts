@@ -1,5 +1,5 @@
 ;app.Diagram = function (width, height, buttons, hLines, addReserve) {
-  var colX, colors, cols, yScaled, stacked, types, draw, x, y,
+  var colX, colors, cols, yScaled, stacked, types, draw,
     prevScaleX = 0, prevScaleY = [], prevMaxY = [],
     prevLeftIndex = -1, animate, steps = 5, colsLength,
     maxX, minX, scaleX,
@@ -10,7 +10,7 @@
     mainOffset, mainScaleY,
     stack = [],
     calcBounds,
-    canvasReserveX = addReserve ? 250 : 0;
+    canvasReserveX = addReserve ? 280 : 0;
 
   var view = new app.E('div');
   view.sW(width);
@@ -111,9 +111,13 @@
     },
 
     render: function (leftIndex, rightIndex, axisX, axesY) {
-      var i;
+      var i, newLeftIndex, newRightIndex;
 
-      calcBounds(leftIndex, rightIndex);
+      var reservedIndex = Math.ceil((rightIndex - leftIndex) * 1.2);
+      newRightIndex = Math.min(colX.length - 1, rightIndex + reservedIndex);
+      newLeftIndex = Math.max(0, leftIndex - reservedIndex);
+
+      calcBounds(leftIndex, rightIndex, newLeftIndex, newRightIndex);
 
       contexts[0].fillStyle = this.bgColor;
       contexts[0].fillRect(0, 0, canvas.width, canvas.height);
@@ -124,9 +128,8 @@
       axisX && axisX.render(leftIndex, rightIndex, scaleX);
       hLines && hLines.render(minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffset, axesY);
 
-      var reservedIndex = Math.ceil((rightIndex - leftIndex) * 0.5);
-      rightIndex = Math.min(colX.length - 1, rightIndex + reservedIndex);
-      leftIndex = Math.max(0, leftIndex - reservedIndex);
+      leftIndex = newLeftIndex;
+      rightIndex = newRightIndex;
 
       if (!animate) {
         animate = true;
@@ -182,7 +185,8 @@
   }
 
   function renderStacked(leftIndex, rightIndex) {
-    var i, j, col;
+    var i, j, x, offsetX, col;
+    offsetX = (colX[rightIndex] - minX) * scaleX / (rightIndex - leftIndex);
 
     for (i = cols.length - 1; i >= 0; i--) {
       if (!buttons.views[i].isActive) continue;
@@ -193,12 +197,11 @@
       ctx.beginPath();
       ctx.moveTo(x, 0);
 
-      for (j = leftIndex; j <= rightIndex; j++) {
-        draw(x, col, stack, j);
+      for (j = leftIndex; j <= rightIndex; j++, x += offsetX) {
+        draw(x, col, stack, j, offsetX);
       }
 
-      ctx.lineTo((colX[rightIndex] - minX) * scaleX, 0);
-      ctx.lineTo(0, 0);
+      ctx.lineTo(x, 0);
       ctx.closePath();
 
       ctx.fillStyle = colors[i];
@@ -211,26 +214,26 @@
     stack[j] -= col[j];
   }
 
-  function stackedBars(x, col, stack, j) {
-    y = (stack[j] - mainMinY) * scaleY;
+  function stackedBars(x, col, stack, j, offsetX) {
+    var y = (stack[j] - mainMinY) * mainScaleY;
     stack[j] -= col[j];
     ctx.lineTo(x, y);
-    x = (colX[j + 1] - minX) * scaleX;
-    ctx.lineTo(x, y);
+    ctx.lineTo(x + offsetX, y);
   }
 
-  function stackedCalcBounds(leftIndex, rightIndex) {
+  function stackedCalcBounds(leftIndex, rightIndex, newLeftIndex, newRightIndex) {
     var i, j;
     stack.length = 0;
+    mainMaxY = -Number.MAX_VALUE;
 
-    for (j = leftIndex; j <= rightIndex; j++) {
+    for (j = newLeftIndex; j <= newRightIndex; j++) {
       stack[j] = 0;
     }
 
     for (i = 0; i < colsLength; i++) {
       if (!buttons.views[i].isActive) continue;
 
-      for (j = leftIndex; j <= rightIndex; j++) {
+      for (j = newLeftIndex; j <= newRightIndex; j++) {
         stack[j] += cols[i][j];
       }
     }
@@ -240,16 +243,13 @@
     }
 
     mainMinY = 0;
-    calcBoundsCommon();
+    calcBoundsCommon(leftIndex, rightIndex);
   }
 
   function linesCalcBounds(leftIndex, rightIndex) {
     var i, j, col;
-    minX = colX[leftIndex];
-    maxX = colX[rightIndex];
     mainMinY = Number.MAX_VALUE;
     mainMaxY = -Number.MAX_VALUE;
-    scaleX = width / (maxX - minX);
 
     for (i = 0; i < colsLength; i++) {
       if (!buttons.views[i].isActive) continue;
@@ -268,11 +268,14 @@
     }
 
     mainMinY = mainMinY === mainMaxY ? 0 : mainMinY;
-    calcBoundsCommon();
+    calcBoundsCommon(leftIndex, rightIndex);
   }
 
-  function calcBoundsCommon() {
+  function calcBoundsCommon(leftIndex, rightIndex) {
     var i;
+    minX = colX[leftIndex];
+    maxX = colX[rightIndex];
+    scaleX = width / (maxX - minX);
     mainMinY = app.round(mainMinY, 'floor');
     mainOffset = Math.max(1, Math.floor((mainMaxY - mainMinY) / steps));
     mainOffset = app.round(mainOffset, 'ceil');

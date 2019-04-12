@@ -1,7 +1,7 @@
 ;window.addEventListener('load', function () {
   var chart, charts = [];
 
-  for (var i = 0; i < 3; i++) {
+  for (var i = 1; i < 3; i++) {
     chart = app.Chart(app.contest[i]);
     charts.push(chart);
   }
@@ -32,23 +32,23 @@
   }
 });
 
-app.formatNumber = function (n, short) {
-  var abs = Math.abs(n);
-  if (abs > 1000000000 && short) return (n / 1000000000).toFixed(2) + 'B';
-  if (abs > 1000000 && short) return (n / 1000000).toFixed(2) + 'M';
-  if (abs > 1000 && short) return (n / 1000).toFixed(1) + 'K';
+app.format = function (number) {
+  if (number === 0) return 0;
 
-  if (abs > 1) {
-    var s = abs.toFixed(0);
-    var formatted = n < 0 ? '-' : '';
-    for (var i = 0; i < s.length; i++) {
-      formatted += s.charAt(i);
-      if ((s.length - 1 - i) % 3 === 0) formatted += ' ';
-    }
-    return formatted;
+  var s = '';
+
+  if (number > 1000000000) {
+    number *= 0.000000001;
+    s = 'B';
+  } else if (number > 1000000) {
+    number *= 0.000001;
+    s = 'M';
+  } else if (number > 1000) {
+    number *= 0.001;
+    s = 'K';
   }
 
-  return n.toString()
+  return number.toFixed(number >= 10 ? 0 : 1) + s;
 };
 
 app.round = function round(num, func) {
