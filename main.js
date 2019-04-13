@@ -116,19 +116,18 @@ app.HLines = function (axesLen) {
 };
 
 app.Header = function (parent, cb) {
-  var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+  var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     getDateStr = getDateStrOver,
     title, zoomOut, zoomOutContainer, data, rangeText, icon,
     dayMs = 1000 * 60 * 60 * 24,
     monthMs = dayMs * 31,
     rangeTexts = [],
-    rangeTextIndex = 0;
 
   title = new app.E('div');
   title.sT('Statistic');
   title.sC('tween');
   title.sC('title');
-  title.sY(16);
+  title.sY(20);
   parent.add(title);
 
   zoomOutContainer = new app.E('div');
@@ -136,7 +135,7 @@ app.Header = function (parent, cb) {
   zoomOutContainer.e.style.position = 'relative';
   zoomOutContainer.sC('tween');
   zoomOutContainer.sC('pointer');
-  zoomOutContainer.sY(16);
+  zoomOutContainer.sY(20);
   zoomOutContainer.sS(1, 0);
   parent.add(zoomOutContainer);
 
@@ -154,24 +153,44 @@ app.Header = function (parent, cb) {
   zoomOut.sT('Zoom Out');
   zoomOutContainer.add(zoomOut);
 
-  for (var i = 0; i < 2; i++) {
-    rangeText = new app.E('div');
-    rangeText.sY(20);
-    rangeText.e.style.right = '0px';
-    rangeText.sC('range-text');
-    rangeText.sC('tween');
-    rangeText.sS(1, 0);
-    parent.add(rangeText);
-    rangeTexts.push(rangeText);
+  var rangeTextsContainer = new app.E('div');
+  rangeTextsContainer.sY(6);
+  rangeTextsContainer.e.style.right = '0px';
+  parent.add(rangeTextsContainer);
+
+  rangeTexts.push([], []);
+
+  for (var j = 0; j < 9; j++) {
+    for (var i = 0; i < 2; i++) {
+      rangeText = new app.E('div');
+      rangeText.sY(20);
+      rangeText.sC('range-text');
+      rangeText.sC('tween');
+      rangeText.sS(1, 0);
+      rangeTextsContainer.add(rangeText);
+      rangeTexts[i].push(rangeText);
+    }
   }
 
   function getDateStrOver(leftTime, rightTime) {
     var leftDate = new Date(leftTime);
     var rightDate = new Date(rightTime);
-    var res = leftDate.getUTCDate() + ' ' + app.months[leftDate.getUTCMonth()] + ' ' + leftDate.getUTCFullYear();
+    var res = [
+      leftDate.getUTCDate() + '&nbsp;',
+      app.months[leftDate.getUTCMonth()] + '&nbsp;',
+      String(leftDate.getUTCFullYear())
+    ];
 
     if (rightDate.getUTCMonth() - leftDate.getUTCMonth() > 1 || rightDate.getTime() - leftDate.getTime() > monthMs) {
-      res += ' - ' + rightDate.getUTCDate() + ' ' + app.months[rightDate.getUTCMonth()] + ' ' + rightDate.getUTCFullYear();
+      res.push(
+        '&nbsp;-&nbsp;',
+        rightDate.getUTCDate() + '&nbsp;',
+        app.months[rightDate.getUTCMonth()] + '&nbsp;',
+        String(rightDate.getUTCFullYear()),
+        '', ''
+      );
+    } else {
+      res.push('', '', '', '', '', '');
     }
 
     return res;
@@ -180,12 +199,23 @@ app.Header = function (parent, cb) {
   function getDateStrDat(leftTime, rightTime) {
     var leftDate = new Date(leftTime);
     var rightDate = new Date(rightTime);
-    var res = days[leftDate.getUTCDay()] + ', ' + leftDate.getUTCDate() + ' ' +
-      app.months[leftDate.getUTCMonth()] + ' ' + leftDate.getUTCFullYear();
+    var res = [
+      days[leftDate.getUTCDay()] + ',&nbsp;',
+      leftDate.getUTCDate() + '&nbsp;',
+      app.months[leftDate.getUTCMonth()] + '&nbsp;',
+      String(leftDate.getUTCFullYear())
+    ];
 
     if (rightDate.getUTCDate() - leftDate.getUTCDate() > 1 || rightDate.getTime() - leftDate.getTime() > dayMs) {
-      res += ' - ' + days[rightDate.getUTCDay()] + ', ' + rightDate.getUTCDate() + ' ' +
-        app.months[rightDate.getUTCMonth()] + ' ' + rightDate.getUTCFullYear();
+      res.push(
+        '&nbsp;-&nbsp;',
+        days[rightDate.getUTCDay()] + ',&nbsp;',
+        rightDate.getUTCDate() + '&nbsp;',
+        app.months[rightDate.getUTCMonth()] + '&nbsp;',
+        String(rightDate.getUTCFullYear())
+      );
+    } else {
+      res.unshift('', '', '', '', '');
     }
 
     return res;
@@ -209,14 +239,25 @@ app.Header = function (parent, cb) {
     },
 
     setRange: function (leftIndex, rightIndex) {
-      rangeTexts[rangeTextIndex].sS(1, 0);
-      rangeTexts[rangeTextIndex].sO(0);
+      var rowTexts = getDateStr(data.columns[0][leftIndex + 1], data.columns[0][rightIndex + 1]).reverse();
+      console.log(rowTexts)
+      var mainRow = rangeTexts[0];
+      var backRow = rangeTexts[1];
 
-      rangeTextIndex = (rangeTextIndex + 1) % 2;
-      rangeTexts[rangeTextIndex].sS(1, 1);
-      rangeTexts[rangeTextIndex].sO(1);
-      rangeTexts[rangeTextIndex]
-        .sT(getDateStr(data.columns[0][leftIndex + 1], data.columns[0][rightIndex + 1]));
+      for (var j = 0, tmp; j < rowTexts.length; j++) {
+        if (rowTexts[j] !== mainRow[j].e.innerHTML) {
+          console.log(j)
+          mainRow[j].sS(1, 0);
+          mainRow[j].sT('');
+
+          tmp = backRow[j];
+          tmp.sS(1, 1);
+          tmp.e.innerHTML = rowTexts[j];
+
+          backRow[j] = mainRow[j];
+          mainRow[j] = tmp;
+        }
+      }
     }
   }
 };

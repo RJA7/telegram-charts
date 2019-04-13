@@ -160,6 +160,8 @@ canvas {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: bold;
+    float: right;
+    position: relative!important;
 }
 
 i {
