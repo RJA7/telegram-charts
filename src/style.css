@@ -13,7 +13,6 @@ body {
 }
 
 .side {
-    background-color: #C0D1E1;
     cursor: grab;
 }
 
@@ -29,10 +28,6 @@ canvas {
     border-radius: 6px;
 }
 
-.scroll-overlay {
-    background-color: rgba(226,238,249,0.6);
-}
-
 .scroll-overlay-left {
     border-radius: 6px 0 0 6px;
 }
@@ -42,18 +37,10 @@ canvas {
 }
 
 .frame {
-    border-top: 2px solid #C0D1E1;
-    border-bottom: 2px solid #C0D1E1;
+    border-top: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
     box-sizing: border-box;
     cursor: grab;
-}
-
-.axis-line {
-    background-color: rgba(24,45,59,0.1);
-}
-
-.main-line {
-    background-color: rgba(24,45,59,0.4);
 }
 
 .info-line {
@@ -148,7 +135,6 @@ canvas {
 }
 
 .zoom {
-    color: #108BE3;
     top: 1px;
     position: relative!important;
     font-size: 17px;
@@ -170,7 +156,7 @@ canvas {
 }
 
 i {
-    border: solid rgba(0,0,0,0.4);
+    border: solid #D2D5D7;
     border-width: 0 3px 3px 0;
     display: inline-block;
     padding: 3px;

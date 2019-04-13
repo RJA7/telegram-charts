@@ -1,5 +1,5 @@
 app.HLines = function (axes) {
-  var lines = [], line, hash = {}, oldHash, prevMainMinY, prevScaleY;
+  var lines = [], line, hash = {}, oldHash = {}, prevMainMinY, prevScaleY;
 
   var view = new app.E('div');
   view.sY(250);
@@ -8,14 +8,12 @@ app.HLines = function (axes) {
   mainLine.sW(400);
   mainLine.sH(3);
   mainLine.sY(-1);
-  mainLine.sC('main-line');
   view.add(mainLine);
 
   function createLine() {
     var line = new app.E('div');
     line.sW(400);
     line.sH(2);
-    line.sC('axis-line');
     line.texts = [];
     view.add(line);
 
@@ -61,6 +59,19 @@ app.HLines = function (axes) {
   }
 
   return {
+    setMode: function (isNight) {
+      var color = isNight ? 'rgba(255,255,255,0.1)' : 'rgba(24,45,59,0.1)';
+      lines.forEach(line => line.e.style.backgroundColor = color);
+
+      for (var key in oldHash) {
+        oldHash[key].e.style.backgroundColor = color;
+      }
+
+      for (var key in hash) {
+        hash[key].e.style.backgroundColor = color;
+      }
+    },
+
     addTo: function (parent) {
       parent.add(view);
     },
@@ -121,7 +132,7 @@ app.HLines = function (axes) {
   }
 };
 
-app.Header = function (parent, cb) {
+app.Header = function (parent, chartName, cb) {
   var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     getDateStr = getDateStrOver,
     title, zoomOut, zoomOutContainer, data, rangeText, icon,
@@ -130,7 +141,7 @@ app.Header = function (parent, cb) {
     rangeTexts = [];
 
   title = new app.E('div');
-  title.sT('Statistic');
+  title.sT(chartName);
   title.sC('tween');
   title.sC('title');
   title.sY(20);
@@ -244,6 +255,10 @@ app.Header = function (parent, cb) {
       getDateStr = getDateStrDat;
     },
 
+    setMode: function (isNight) {
+      zoomOut.e.style.color = isNight ? '#48AAF0' : '#108BE3';
+    },
+
     setRange: function (leftIndex, rightIndex) {
       var rowTexts = getDateStr(data.columns[0][leftIndex + 1], data.columns[0][rightIndex + 1]).reverse();
       var mainRow = rangeTexts[0];
@@ -350,10 +365,9 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       nameEls.push(nameEl);
 
       var valueEl = new app.E('div');
-      valueEl.sX(110);
       valueEl.sC('info-val');
       valueEl.sC('tween');
-      valueEl.e.style.right = 12 + 'px';
+      valueEl.e.style.right = 8 + 'px';
       bg.add(valueEl);
       valueEls.push(valueEl);
     }
@@ -477,12 +491,10 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     }
 
     for (i = 0, n = 0, l = nameEls.length, sum = 0; i < l; i++) {
-      if (i > buttons.views.length) break;
-
       valueEl = valueEls[i];
       nameEl = nameEls[i];
 
-      if (i === buttons.views.length && i > 1) {
+      if (i === buttons.views.length && i > 1 && !isSingle) {
         value = app.format(sum);
         btnName = 'All';
         btnColor = '#000000';
@@ -505,6 +517,8 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       y = 26 + n * 20;
       nameEl.sY(y);
       valueEl.sY(y);
+      nameEl.sS(1, 1);
+      valueEl.sS(1, 1);
       nameEl.sT(btnName);
       valueEl.e.style.color = btnColor;
 
@@ -555,106 +569,99 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
   }
 };
 
-app.Buttons = function (parent, isSingle, cb) {
+app.Buttons = function (parent, isSingle, dat, cb) {
   var buttons, view;
 
   view = new app.E('div');
   view.sY(450);
   parent.add(view);
 
-  function init(dat) {
-    var names = [], colors = [];
+  var names = [];
 
-    dat.columns.slice(1).forEach(function (col) {
-      names.push(dat.names[col[0]]);
-      colors.push(dat.colors[col[0]]);
-    });
+  dat.columns.slice(1).forEach(function (col) {
+    names.push(dat.names[col[0]]);
+  });
 
-    buttons = names.map(function (name, i) {
-      var button, tick, text, timeout, downTime;
+  buttons = names.map(function (name, i) {
+    var button, tick, text, timeout, downTime;
 
-      button = new app.E('div');
-      button.name = name;
-      button.color = colors[i];
-      button.e.style.backgroundColor = colors[i];
-      button.sC('button');
-      view.add(button);
+    button = new app.E('div');
+    button.name = name;
+    button.sC('button');
+    view.add(button);
 
-      tick = new app.E('img');
-      tick.e.src = 'img/tick.png';
-      tick.sC('tween');
-      tick.sC('tick');
-      button.add(tick);
+    tick = new app.E('img');
+    tick.e.src = 'img/tick.png';
+    tick.sC('tween');
+    tick.sC('tick');
+    button.add(tick);
 
-      text = new app.E('span');
-      text.sC('button-text');
-      text.sT(name);
-      button.add(text);
+    text = new app.E('span');
+    text.sC('button-text');
+    text.sT(name);
+    button.add(text);
 
-      button.isActive = true;
-      button.tick = tick;
-      button.text = text;
+    button.isActive = true;
+    button.tick = tick;
+    button.text = text;
 
-      function getActiveCount() {
-        var res = 0;
+    function getActiveCount() {
+      var res = 0;
 
-        for (var i = 0; i < buttons.length; i++) {
-          res += buttons[i].isActive ? 1 : 0;
-        }
-
-        return res;
+      for (var i = 0; i < buttons.length; i++) {
+        res += buttons[i].isActive ? 1 : 0;
       }
 
-      function turnOffAllBeside(btn) {
-        var i, s, l;
-        btn.isDown = false;
+      return res;
+    }
 
-        for (i = 0, l = buttons.length; i < l; i++) {
-          btn = buttons[i];
-          btn.isActive = btn === button;
-          s = btn.isActive ? 1 : 0;
-          btn.tick.sS(s, s);
-        }
+    function turnOffAllBeside(btn) {
+      var i, s, l;
+      btn.isDown = false;
 
-        cb(buttons);
+      for (i = 0, l = buttons.length; i < l; i++) {
+        btn = buttons[i];
+        btn.isActive = btn === button;
+        s = btn.isActive ? 1 : 0;
+        btn.tick.sS(s, s);
       }
 
-      button.onDown(function () {
-        button.isDown = true;
-        downTime = Date.now();
-        timeout = setTimeout(function () {
-          turnOffAllBeside(button);
-        }, 200);
-      });
+      cb(buttons);
+    }
 
-      button.onUp(function onUp() {
-        if (!button.isDown || Date.now() - downTime > 200) return;
-        button.isDown = false;
-
-        clearTimeout(timeout);
-
-        if (getActiveCount() === 1 && button.isActive) {
-          return;
-        }
-
-        button.isActive = !button.isActive;
-
-        var s = button.isActive ? 1 : 0;
-        tick.sS(s, s);
-
-        cb(buttons);
-      });
-
-      return button;
+    button.onDown(function () {
+      button.isDown = true;
+      downTime = Date.now();
+      timeout = setTimeout(function () {
+        turnOffAllBeside(button);
+      }, 200);
     });
-  }
+
+    button.onUp(function onUp() {
+      if (!button.isDown || Date.now() - downTime > 200) return;
+      button.isDown = false;
+
+      clearTimeout(timeout);
+
+      if (getActiveCount() === 1 && button.isActive) {
+        return;
+      }
+
+      button.isActive = !button.isActive;
+
+      var s = button.isActive ? 1 : 0;
+      tick.sS(s, s);
+
+      cb(buttons);
+    });
+
+    return button;
+  });
 
   return {
-    setOver: function (dat) {
-      !buttons && init(dat);
-
+    setOver: function (overview) {
       if (isSingle) {
-        this.views = [{isActive: true, name: dat.names.y0}];
+        this.views = [{isActive: true, name: overview.names.y0}];
         view.sO(0);
       } else {
         this.views = buttons;
@@ -671,6 +678,12 @@ app.Buttons = function (parent, isSingle, cb) {
           buttons[i].text.sT(buttons[i].name);
         }
       }
+    },
+
+    setMode: function (isNight, config) {
+      buttons.forEach((button, i) => {
+        button.e.style.backgroundColor = config.buttons[dat.columns[i + 1][0]];
+      });
     },
 
     views: null
@@ -797,7 +810,7 @@ app.AxisX = function (parent) {
   }
 };
 
-app.Chart = function (contest, chartIndex) {
+app.Chart = function (contest, chartIndex, chartName) {
   var Elem = app.E,
     input = app.i,
     overview = contest.overview,
@@ -824,12 +837,12 @@ app.Chart = function (contest, chartIndex) {
   view.sH(540);
   view.sC('chart');
 
-  header = app.Header(view, onOverMode);
-  buttons = app.Buttons(view, isSingle, onButtonClick);
+  header = app.Header(view, chartName, onOverMode);
+  buttons = app.Buttons(view, isSingle, data[0] || overview, onButtonClick);
 
   hLines = new app.HLines(overview.y_scaled ? [overview.colors.y0, overview.colors.y1] : ['']);
 
-  var Diagram = overview.percentage ? app.DiagramP : app.Diagram;
+  var Diagram = app.Diagram; //overview.percentage ? app.DiagramP : app.Diagram;
   diagram = Diagram(400, 250, buttons, hLines, true);
   diagram.view.sX(0);
   diagram.view.sY(80);
@@ -842,9 +855,6 @@ app.Chart = function (contest, chartIndex) {
 
   info = app.Info(chart, diagram, scrollBar, buttons, isSingle, onDatMode);
 
-  onDayMode();
-  onOverMode();
-
   function onButtonClick() {
     scrollBar.renderDiagram();
     diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX);
@@ -855,15 +865,10 @@ app.Chart = function (contest, chartIndex) {
     diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX);
   }
 
-  function onDayMode() {
-    diagram.bgColor = '#ffffff';
-    scrollBar.diagram.bgColor = '#ffffff'; // 'rgba(226,238,249,0.6)';
-  }
-
   function onOverMode() {
     isOverMode = true;
     header.setOver(overview);
-    buttons.setOver(data[0] || overview);
+    buttons.setOver(overview);
     scrollBar.setOver(overview);
     diagram.setOver(overview);
     axisX.setOver(overview);
@@ -877,7 +882,7 @@ app.Chart = function (contest, chartIndex) {
     if (!isOverMode) return;
     isOverMode = false;
 
-    var dat = data[i];
+    var dat = data[i] || overview;
     leftIndex = scrollBar.leftIndex;
     rightIndex = scrollBar.rightIndex;
     index = i;
@@ -898,15 +903,27 @@ app.Chart = function (contest, chartIndex) {
 
   return {
     view: view,
+    onOverMode: onOverMode,
 
-    update: function () {
+    setMode: function (isNight) {
+      var config = app.config[isNight ? 'night' : 'day'][chartIndex];
 
+      diagram.setMode(isNight, config);
+      scrollBar.diagram.setMode(isNight, config);
+      buttons.setMode(isNight, config);
+      // info.setMode(isNight, config);
+      //
+      // hLines.setMode(isNight, config);
+      // axisX.setMode(isNight, config);
+      // header.setMode(isNight);
+      // diagram.bgColor = '#ffffff';
+      // scrollBar.diagram.bgColor = '#ffffff'; // 'rgba(226,238,249,0.6)';
     }
   };
 };
 
 app.Diagram = function (width, height, buttons, hLines, addReserve) {
-  var colX, colors, cols, yScaled, stacked, types,
+  var colX, cols, yScaled, stacked, types,
     prevScaleX = 0, prevScaleY = [], prevMaxY = [],
     prevLeftIndex = -1, prevRightIndex, animate, steps = 5, colsLength,
     maxX, minX, scaleX,
@@ -916,8 +933,9 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
     canvases = [], canvasContainers = [], contexts = [], canvasContainer, canvas, ctx, canvasesLen,
     mainOffset, mainScaleY,
     stack = [],
+    curDat,
     calcBounds,
-    canvasReserveX = addReserve ? 400 : 0;
+    canvasReserveX = addReserve ? 400 : 0, modeConfig;
 
   var view = new app.E('div');
   view.sW(width);
@@ -969,15 +987,14 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
   }
 
   function reset(dat) {
+    curDat = dat;
     animate = false;
     colX = dat.columns[0].slice(1);
     types = dat.types;
     yScaled = dat.y_scaled;
     stacked = dat.stacked || types.y0 === 'bar';
-    colors = [];
 
     cols = dat.columns.slice(1).map(function (col) {
-      colors.push(dat.colors[col[0]]);
       col = col.slice(1);
 
       return col;
@@ -1021,6 +1038,10 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
 
     setDat: function (dat) {
       init(dat);
+    },
+
+    setMode: function (isNight, config) {
+      modeConfig = config;
     },
 
     getY: function (colIndex, index) {
@@ -1109,7 +1130,7 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
         ctx.lineTo((colX[j] - minX) * scaleX, (col[j] - minY[i]) * scaleY[i]);
       }
 
-      ctx.strokeStyle = colors[i];
+      ctx.strokeStyle = modeConfig.lines[curDat.columns[i + 1][0]];
       ctx.stroke();
     }
   }
@@ -1137,7 +1158,7 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
       ctx.lineTo(x, 0);
       ctx.closePath();
 
-      ctx.fillStyle = colors[i];
+      ctx.fillStyle = modeConfig.lines[curDat.columns[i + 1][0]];
       ctx.fill();
     }
   }
@@ -1287,7 +1308,6 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
   sides = [leftSideMove, rightSideMove].map(function (handler, i) {
     var overlay = new Elem('div');
     overlay.sH(view.h);
-    overlay.sC('scroll-overlay');
     overlay.sC('tween');
     overlay.sC(i === 0 ? 'scroll-overlay-left' : 'scroll-overlay-right');
     view.add(overlay);
@@ -1369,6 +1389,17 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
           return date.getUTCHours() === 0;
         });
       }
+    },
+
+    setMode: function (isNight) {
+      var overlayColor = isNight ? 'rgba(48,66,89,0.6)' : 'rgba(226,238,249,0.6)';
+      var sideColor = isNight ? '#56626D' : '#C0D1E1';
+      frame.e.style.borderColor = sideColor;
+
+      sides.forEach(side => {
+        side.overlay.e.style.backgroundColor = overlayColor;
+        side.e.style.backgroundColor = sideColor;
+      });
     },
 
     renderDiagram: function render() {
@@ -1581,6 +1612,11 @@ app.E = (function () {
     this.e.classList.add(addClass);
   };
 
+  p.tC = function (addClass, removeClass) {
+    this.e.classList.add(addClass);
+    this.e.classList.remove(removeClass);
+  };
+
   p.rC = function (removeClass) {
     this.e.classList.remove(removeClass);
   };
@@ -1609,22 +1645,17 @@ app.E = (function () {
 
 window.addEventListener('load', function () {
   var chart, charts = [];
+  var names = ['Followers', 'Interactions', 'Messages', 'Views', 'Apps'];
 
   for (var i = 0; i < 5; i++) {
-    chart = app.Chart(app.contest[i], i);
+    chart = app.Chart(app.contest[i], i, names[i]);
+    chart.setMode(false);
+    chart.onOverMode();
     charts.push(chart);
   }
 
   onResize();
   window.addEventListener('resize', onResize);
-
-  (function update() {
-    requestAnimationFrame(update);
-
-    for (var i = 0, l = charts.length; i < l; i++) {
-      charts[i].update();
-    }
-  }());
 
   function onResize() {
     var offset = 25;
@@ -1638,6 +1669,14 @@ window.addEventListener('load', function () {
       chart.view.sc = sc;
     }
   }
+
+  function setMode(isNight) {
+    for (var i = 0; i < 5; i++) {
+      charts[i].setMode(isNight);
+    }
+  }
+
+  setTimeout(setMode, 1000, true);
 });
 
 app.format = function (number) {
