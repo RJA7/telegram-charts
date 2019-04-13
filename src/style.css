@@ -5,7 +5,7 @@ body {
 }
 
 .bold {
-    font-weight: bold!important;
+    font-weight: bold !important;
 }
 
 .chart {
@@ -44,14 +44,14 @@ canvas {
 }
 
 .info-line {
-    background-color: rgba(24,45,59,0.1);
+    background-color: rgba(24, 45, 59, 0.1);
 }
 
 .info-bg {
     transition: left 150ms ease-out;
     background-color: #ffffff;
     border-radius: 10px;
-    border: 2px solid rgba(24,45,59,0.1);
+    border: 2px solid rgba(24, 45, 59, 0.1);
 }
 
 .info-name {
@@ -59,7 +59,7 @@ canvas {
 }
 
 .info-main-text {
-    position: relative!important;
+    position: relative !important;
     float: left;
     font-weight: bold;
     font-size: 13px;
@@ -84,7 +84,8 @@ canvas {
 }
 
 .button {
-    position: relative!important;
+    position: relative !important;
+    border: solid 2px;
     border-radius: 30px;
     padding: 8px 6px 8px 12px;
     margin: 4px 3px;
@@ -94,7 +95,7 @@ canvas {
 }
 
 .button-text {
-    position: relative!important;
+    position: relative !important;
     margin-right: 8px;
     margin-left: 2px;
     float: left;
@@ -102,7 +103,7 @@ canvas {
 }
 
 .tick {
-    position: relative!important;
+    position: relative !important;
     float: left;
     margin: 1px;
     height: 14px;
@@ -136,7 +137,7 @@ canvas {
 
 .zoom {
     top: 1px;
-    position: relative!important;
+    position: relative !important;
     font-size: 17px;
     margin-left: 6px;
 }
@@ -152,7 +153,7 @@ canvas {
     white-space: nowrap;
     font-weight: bold;
     float: right;
-    position: relative!important;
+    position: relative !important;
 }
 
 i {
@@ -165,6 +166,25 @@ i {
 .arrow-right {
     transform: rotate(-45deg);
     -webkit-transform: rotate(-45deg);
+}
+
+.shake {
+    animation: shake 300ms cubic-bezier(.36, .07, .19, .97) both;
+    transform: translate(0, 0);
+}
+
+@keyframes shake {
+    20%, 60% {
+        transform: translate(-4px, 0);
+    }
+
+    40%, 80% {
+        transform: translate(4px, 0);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
 }
 
 #footer {

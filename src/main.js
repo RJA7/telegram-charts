@@ -583,7 +583,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
 };
 
 app.Buttons = function (parent, isSingle, dat, cb) {
-  var buttons, view;
+  var buttons, view, mainBgColor = '#ffffff';
 
   view = new app.E('div');
   view.sY(450);
@@ -594,6 +594,41 @@ app.Buttons = function (parent, isSingle, dat, cb) {
   dat.columns.slice(1).forEach(function (col) {
     names.push(dat.names[col[0]]);
   });
+
+  function removeShake(btn) {
+    btn.rC('shake');
+  }
+
+  function shake(btn) {
+    btn.sC('shake');
+    setTimeout(removeShake, 300, btn);
+  }
+
+  function getActiveCount() {
+    var res = 0;
+
+    for (var i = 0; i < buttons.length; i++) {
+      res += buttons[i].isActive ? 1 : 0;
+    }
+
+    return res;
+  }
+
+  function turnOffAllBeside(button) {
+    var i, s, l, btn;
+    button.isDown = false;
+
+    for (i = 0, l = buttons.length; i < l; i++) {
+      btn = buttons[i];
+      btn.isActive = btn === button;
+      s = btn.isActive ? 1 : 0;
+      btn.tick.sS(s, s);
+
+      btn.e.style.backgroundColor = btn.isActive ? btn.color : mainBgColor;
+    }
+
+    cb(buttons);
+  }
 
   buttons = names.map(function (name, i) {
     var button, tick, text, timeout, downTime;
@@ -618,36 +653,10 @@ app.Buttons = function (parent, isSingle, dat, cb) {
     button.tick = tick;
     button.text = text;
 
-    function getActiveCount() {
-      var res = 0;
-
-      for (var i = 0; i < buttons.length; i++) {
-        res += buttons[i].isActive ? 1 : 0;
-      }
-
-      return res;
-    }
-
-    function turnOffAllBeside(btn) {
-      var i, s, l;
-      btn.isDown = false;
-
-      for (i = 0, l = buttons.length; i < l; i++) {
-        btn = buttons[i];
-        btn.isActive = btn === button;
-        s = btn.isActive ? 1 : 0;
-        btn.tick.sS(s, s);
-      }
-
-      cb(buttons);
-    }
-
     button.onDown(function () {
       button.isDown = true;
       downTime = Date.now();
-      timeout = setTimeout(function () {
-        turnOffAllBeside(button);
-      }, 200);
+      timeout = setTimeout(turnOffAllBeside, 200, button);
     });
 
     button.onUp(function onUp() {
@@ -657,10 +666,12 @@ app.Buttons = function (parent, isSingle, dat, cb) {
       clearTimeout(timeout);
 
       if (getActiveCount() === 1 && button.isActive) {
+        shake(button);
         return;
       }
 
       button.isActive = !button.isActive;
+      button.e.style.backgroundColor = button.isActive ? button.color : mainBgColor;
 
       var s = button.isActive ? 1 : 0;
       tick.sS(s, s);
@@ -693,10 +704,14 @@ app.Buttons = function (parent, isSingle, dat, cb) {
       }
     },
 
-    setMode: function (isNight, config) {
+    setMode: function (isNight, config, bgColor) {
+      mainBgColor = bgColor;
+
       buttons.forEach((button, i) => {
-        button.e.style.backgroundColor = config.buttons[dat.columns[i + 1][0]];
+        button.color = config.buttons[dat.columns[i + 1][0]];
         button.tooltipColor = config.tooltip[dat.columns[i + 1][0]];
+        button.e.style.borderColor = button.color;
+        button.e.style.backgroundColor = button.isActive ? button.color : mainBgColor;
       });
     },
 
@@ -940,7 +955,7 @@ app.Chart = function (contest, chartIndex, chartName) {
 
       diagram.setMode(isNight, config);
       scrollBar.setMode(isNight, config);
-      buttons.setMode(isNight, config);
+      buttons.setMode(isNight, config, bgColor);
       hLines.setMode(isNight, config);
       axisX.setMode(isNight, config);
       header.setMode(isNight);
