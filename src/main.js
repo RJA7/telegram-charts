@@ -1,4 +1,4 @@
-app.HLines = function (axesLen) {
+app.HLines = function (axes) {
   var lines = [], line, hash = {}, oldHash, prevMainMinY, prevScaleY;
 
   var view = new app.E('div');
@@ -19,11 +19,17 @@ app.HLines = function (axesLen) {
     line.texts = [];
     view.add(line);
 
-    for (var i = 0, text; i < axesLen; i++) {
+    for (var i = 0, text; i < axes.length; i++) {
       text = new app.E('div');
+
       if (i === 1) {
         text.e.style.right = 0 + 'px';
       }
+
+      if (axes[i]) {
+        text.e.style.color = axes[i];
+      }
+
       text.sY(-16);
       line.add(text);
       line.texts.push(text);
@@ -42,7 +48,7 @@ app.HLines = function (axesLen) {
     lines.push(line);
   }
 
-  function reset() {
+  function reset(dat) {
     prevScaleY = 1;
     prevMainMinY = 0;
 
@@ -59,12 +65,12 @@ app.HLines = function (axesLen) {
       parent.add(view);
     },
 
-    setOver: function () {
-      reset();
+    setOver: function (overview) {
+      reset(overview);
     },
 
-    setDat: function () {
-      reset();
+    setDat: function (dat) {
+      reset(dat);
     },
 
     render: function (minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffsetY) {
@@ -91,7 +97,7 @@ app.HLines = function (axesLen) {
           line.sB((y - mainMinY) * mainScaleY);
         }
 
-        for (j = 0; j < axesLen; j++) {
+        for (j = 0; j < axes.length; j++) {
           text = line.texts[j];
           text.sT(app.format(minY[j] + offsetY[j] * i));
         }
@@ -240,13 +246,11 @@ app.Header = function (parent, cb) {
 
     setRange: function (leftIndex, rightIndex) {
       var rowTexts = getDateStr(data.columns[0][leftIndex + 1], data.columns[0][rightIndex + 1]).reverse();
-      console.log(rowTexts)
       var mainRow = rangeTexts[0];
       var backRow = rangeTexts[1];
 
       for (var j = 0, tmp; j < rowTexts.length; j++) {
         if (rowTexts[j] !== mainRow[j].e.innerHTML) {
-          console.log(j)
           mainRow[j].sS(1, 0);
           mainRow[j].sT('');
 
@@ -273,7 +277,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     isBar,
     overlayLeft, overlayRight,
     circleHash = {},
-    days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut'],
+    days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut', 'Sun'],
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   view = new app.E('div');
@@ -743,7 +747,7 @@ app.Chart = function (contest, chartIndex) {
   header = app.Header(view, onOverMode);
   buttons = app.Buttons(view, isSingle, onButtonClick);
 
-  hLines = new app.HLines(overview.y_scaled ? 2 : 1);
+  hLines = new app.HLines(overview.y_scaled ? [overview.colors.y0, overview.colors.y1] : ['']);
 
   var Diagram = overview.percentage ? app.DiagramP : app.Diagram;
   diagram = Diagram(400, 250, buttons, hLines, true);
