@@ -188,7 +188,7 @@ app.Header = function (parent, chartName, cb) {
     rangeText = new app.E('div');
     rangeText.sY(20);
     rangeText.sC('range-text');
-    rangeText.sC('tween');
+    rangeText.sC('tw');
     rangeText.sS(1, 0);
     rangeTextsContainer.add(rangeText);
     rangeTexts.push(rangeText);
@@ -346,7 +346,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
   for (j = 0; j < 5; j++) {
     var mainText = new app.E('div');
     mainText.sC('info-main-text');
-    mainText.sC('tween');
+    mainText.sC('tw');
     mainTextContainer.add(mainText);
 
     mainTexts[j] = mainText;
@@ -368,7 +368,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
 
     var valueEl = new app.E('div');
     valueEl.sC('info-val');
-    valueEl.sC('tween');
+    valueEl.sC('tw');
     valueEl.e.style.right = 8 + 'px';
     bg.add(valueEl);
     valueEls.push(valueEl);
@@ -1335,7 +1335,7 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
     height = 50,
     moveHandler = empty,
     totalDays = 1,
-    view, diagram, frame, sides, sideLeft, sideRight, self, anchorsX = [], anchorsMap = [];
+    view, diagram, frame, sides, sideLeft, sideRight, self, anchorsX = [], anchorsMap = [], isReady = true;
 
   view = new Elem('div');
   view.sY(370);
@@ -1459,14 +1459,21 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
   };
 
   app.i.moveHandlers.push(function () {
-    moveHandler();
+    isReady && moveHandler();
   });
 
   app.i.upHandlers.push(function () {
     moveHandler = empty;
   });
 
+  function ready() {
+    isReady = true;
+  }
+
   function setRange(leftIndex, rightIndex) {
+    isReady = false;
+    setTimeout(ready, 20);
+
     self.leftIndex = leftIndex;
     self.rightIndex = rightIndex;
     sideLeft.sX(leftIndex / totalDays * width - sideWidth);

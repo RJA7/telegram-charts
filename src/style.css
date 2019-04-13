@@ -110,12 +110,20 @@ canvas {
     width: 14px;
 }
 
+.tw {
+    -webkit-transition: all 80ms ease-out;
+    -moz-transition: all 80ms ease-out;
+    -ms-transition: all 80ms ease-out;
+    -o-transition: all 80ms ease-out;
+    transition: all 80ms ease-out;
+}
+
 .tween {
-    -webkit-transition: all 160ms ease-out;
-    -moz-transition: all 160ms ease-out;
-    -ms-transition: all 160ms ease-out;
-    -o-transition: all 160ms ease-out;
-    transition: all 160ms ease-out;
+    -webkit-transition: all 140ms ease-out;
+    -moz-transition: all 140ms ease-out;
+    -ms-transition: all 140ms ease-out;
+    -o-transition: all 140ms ease-out;
+    transition: all 140ms ease-out;
 }
 
 .tween-alpha {
