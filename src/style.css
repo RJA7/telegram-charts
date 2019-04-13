@@ -4,6 +4,10 @@ body {
     overflow-x: hidden;
 }
 
+.bold {
+    font-weight: bold!important;
+}
+
 .chart {
     transform-origin: top left;
 }
@@ -54,7 +58,6 @@ canvas {
 
 .info-line {
     background-color: rgba(24,45,59,0.1);
-    /*transition: left 150ms ease-out;*/
 }
 
 .info-bg {

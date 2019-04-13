@@ -276,83 +276,87 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     isBar,
     overlayLeft, overlayRight,
     circleHash = {},
-    mainTexts = [[], []],
+    mainTexts = [],
     mainTextContainer,
     getMainText = getMainTextOverview,
     days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut', 'Sun'],
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  view = new app.E('div');
-  view.sC('tween');
-  view.sW(diagram.view.w);
-  view.sH(diagram.view.h);
-  view.sO(0);
-  view.sY(0);
-  diagram.view.add(view);
+  function init(colsLen) {
+    init = function () {
+    };
 
-  overlayLeft = new app.E('div');
-  overlayLeft.sW(0);
-  overlayLeft.sH(diagram.view.h);
-  overlayLeft.sC('info-overlay');
-  diagram.overlayLayer.add(overlayLeft);
+    view = new app.E('div');
+    view.sC('tween');
+    view.sW(diagram.view.w);
+    view.sH(diagram.view.h);
+    view.sO(0);
+    view.sY(0);
+    diagram.view.add(view);
 
-  overlayRight = new app.E('div');
-  overlayRight.sW(0);
-  overlayRight.sH(diagram.view.h);
-  overlayRight.e.style.right = 0 + 'px';
-  overlayRight.sC('info-overlay');
-  diagram.overlayLayer.add(overlayRight);
+    overlayLeft = new app.E('div');
+    overlayLeft.sW(0);
+    overlayLeft.sH(diagram.view.h);
+    overlayLeft.sC('info-overlay');
+    diagram.overlayLayer.add(overlayLeft);
 
-  line = new app.E('div');
-  line.sW(2);
-  line.sY(0);
-  line.sH(diagram.view.h);
-  line.sC('info-line');
-  view.add(line);
+    overlayRight = new app.E('div');
+    overlayRight.sW(0);
+    overlayRight.sH(diagram.view.h);
+    overlayRight.e.style.right = 0 + 'px';
+    overlayRight.sC('info-overlay');
+    diagram.overlayLayer.add(overlayRight);
 
-  bg = new app.E('div');
-  bg.sC('info-bg');
-  bg.sW(140);
-  bg.sH(60);
-  bg.onDown(onBgClick);
-  view.add(bg);
+    line = new app.E('div');
+    line.sW(2);
+    line.sY(0);
+    line.sH(diagram.view.h);
+    line.sC('info-line');
+    view.add(line);
 
-  mainTextContainer = new app.E('div');
-  mainTextContainer.sX(10);
-  mainTextContainer.sY(4);
-  bg.add(mainTextContainer);
+    bg = new app.E('div');
+    bg.sC('info-bg');
+    bg.sW(140);
+    bg.sH(60);
+    bg.onDown(onBgClick);
+    view.add(bg);
 
-  for (j = 0; j < 5; j++) {
-    for (i = 0; i < 2; i++) {
+    mainTextContainer = new app.E('div');
+    mainTextContainer.sX(10);
+    mainTextContainer.sY(4);
+    bg.add(mainTextContainer);
+
+    for (j = 0; j < 5; j++) {
       var mainText = new app.E('div');
       mainText.sC('info-main-text');
       mainText.sC('tween');
       mainTextContainer.add(mainText);
 
-      mainTexts[i][j] = mainText;
+      mainTexts[j] = mainText;
     }
-  }
 
-  arrow = document.createElement('i');
-  arrow.classList.add('arrow-right');
-  arrow.style.right = 7 + 'px';
-  arrow.style.top = 7 + 'px';
-  arrow.style.position = 'absolute';
-  bg.e.appendChild(arrow);
+    arrow = document.createElement('i');
+    arrow.classList.add('arrow-right');
+    arrow.style.right = 7 + 'px';
+    arrow.style.top = 7 + 'px';
+    arrow.style.position = 'absolute';
+    bg.e.appendChild(arrow);
 
-  for (i = 0; i < 7; i++) {
-    var nameEl = new app.E('div');
-    bg.add(nameEl);
-    nameEl.sC('info-name');
-    nameEl.sX(10);
-    nameEls.push(nameEl);
+    for (i = 0; i <= colsLen; i++) {
+      var nameEl = new app.E('div');
+      bg.add(nameEl);
+      nameEl.sC('info-name');
+      nameEl.sX(10);
+      nameEls.push(nameEl);
 
-    var valueEl = new app.E('div');
-    valueEl.sX(110);
-    valueEl.sC('info-val');
-    valueEl.e.style.right = 12 + 'px';
-    bg.add(valueEl);
-    valueEls.push(valueEl);
+      var valueEl = new app.E('div');
+      valueEl.sX(110);
+      valueEl.sC('info-val');
+      valueEl.sC('tween');
+      valueEl.e.style.right = 12 + 'px';
+      bg.add(valueEl);
+      valueEls.push(valueEl);
+    }
   }
 
   diagram.view.onDown(function () {
@@ -430,10 +434,16 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     ];
   }
 
+  function showElems(elems) {
+    for (var i = 0, l = elems.length; i < l; i++) {
+      elems[i].sS(1, 1);
+    }
+  }
+
   function render() {
     var localY = chart.getInputY() - diagram.view.y,
       localX = chart.getInputX() - diagram.view.x,
-      len, step, i, j, y, n, l, tmp;
+      len, step, i, j, y, n, l, sum, value, valueEl, nameEl, elemsToShow = [], btnName, btnColor;
 
     len = scrollBar.rightIndex - scrollBar.leftIndex;
     step = diagram.view.w / len;
@@ -466,21 +476,44 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       }
     }
 
-    for (i = 0, n = 0, l = nameEls.length; i < l; i++) {
-      if (!buttons.views[i] || !buttons.views[i].isActive) {
-        nameEls[i].sO(0);
-        valueEls[i].sO(0);
+    for (i = 0, n = 0, l = nameEls.length, sum = 0; i < l; i++) {
+      if (i > buttons.views.length) break;
+
+      valueEl = valueEls[i];
+      nameEl = nameEls[i];
+
+      if (i === buttons.views.length && i > 1) {
+        value = app.format(sum);
+        btnName = 'All';
+        btnColor = '#000000';
+        valueEl.sC('bold');
+      } else if (!buttons.views[i] || !buttons.views[i].isActive) {
+        nameEl.sS(1, 0);
+        valueEl.sS(1, 0);
+        nameEl.sT('');
+        valueEl.sT('');
+
         continue;
+      } else {
+        sum += cols[i][index + 1];
+        value = app.format(cols[i][index + 1]);
+        btnName = buttons.views[i].name;
+        btnColor = buttons.views[i].color;
+        valueEl.rC('bold');
       }
 
       y = 26 + n * 20;
-      nameEls[i].sO(1);
-      valueEls[i].sO(1);
-      nameEls[i].sY(y);
-      valueEls[i].sY(y);
-      nameEls[i].sT(buttons.views[i].name);
-      valueEls[i].e.style.color = buttons.views[i].color;
-      valueEls[i].sT(app.format(cols[i][index + 1], true));
+      nameEl.sY(y);
+      valueEl.sY(y);
+      nameEl.sT(btnName);
+      valueEl.e.style.color = btnColor;
+
+      if (valueEls[i].e.innerText !== value) {
+        valueEl.sT(value);
+        valueEl.sS(1, 0);
+        elemsToShow.push(valueEl);
+      }
+
       n++;
     }
 
@@ -488,18 +521,14 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     var mainText = getMainText(new Date(colX[scrollBar.leftIndex + index + 1]));
 
     for (j = 0; j < mainText.length; j++) {
-      if (mainText[j] !== mainTexts[0][j].e.innerHTML) {
-        mainTexts[0][j].sS(1, 0);
-        mainTexts[0][j].sT('');
-
-        tmp = mainTexts[1][j];
-        tmp.e.innerHTML = mainText[j];
-        tmp.sS(1, 1);
-
-        mainTexts[1][j] = mainTexts[0][j];
-        mainTexts[0][j] = tmp;
+      if (mainText[j] !== mainTexts[j].e.innerHTML) {
+        mainTexts[j].sS(1, 0);
+        mainTexts[j].e.innerHTML = mainText[j];
+        elemsToShow.push(mainTexts[j]);
       }
     }
+
+    setTimeout(showElems, 80, elemsToShow);
   }
 
   function reset(dat) {
@@ -509,7 +538,8 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
   }
 
   return {
-    setOver: function (overview) {
+    setOver: function (overview, dat) {
+      init(dat.columns.length);
       reset(overview);
       isBar = overview.types.y0 === 'bar';
       arrow.style.visibility = 'visible';
@@ -838,7 +868,7 @@ app.Chart = function (contest, chartIndex) {
     diagram.setOver(overview);
     axisX.setOver(overview);
     hLines.setOver(overview);
-    info.setOver(overview);
+    info.setOver(overview, data[0] || overview);
     scrollBar.setRange(leftIndex, rightIndex);
     scrollBar.renderDiagram();
   }
