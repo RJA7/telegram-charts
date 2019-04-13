@@ -625,7 +625,7 @@ app.Buttons = function (parent, isSingle, dat, cb) {
   var buttons, view, mainBgColor = '#ffffff';
 
   view = new app.E('div');
-  view.sY(450);
+  view.sY(435);
   parent.add(view);
 
   var names = [];
@@ -909,7 +909,7 @@ app.Chart = function (contest, chartIndex, chartName) {
     isSingle = chartIndex === 3,
     rightIndex = Math.min(90, overview.columns[0].length - 2),
     body = document.body,
-    view, diagram, axisX, buttons, header, scrollBar, info, hLines, isOverMode, isInited;
+    view, diagram, axisX, buttons, header, scrollBar, info, hLines, isOverMode, isInited, diagramP, curDat;
 
   var chart = {
     getInputX: function getInputX() {
@@ -932,11 +932,17 @@ app.Chart = function (contest, chartIndex, chartName) {
 
   hLines = new app.HLines(overview.y_scaled ? [overview.colors.y0, overview.colors.y1] : ['']);
 
-  var Diagram = app.Diagram; //overview.percentage ? app.DiagramP : app.Diagram;
-  diagram = Diagram(400, 250, buttons, hLines, true, isSingle);
+  diagram = app.Diagram(400, 250, buttons, hLines, true, isSingle);
   diagram.view.sX(0);
   diagram.view.sY(80);
   view.add(diagram.view);
+
+  if (overview.percentage) {
+    diagramP = app.DiagramP(400, 250, buttons);
+    diagramP.view.sX(0);
+    diagramP.view.sY(80);
+    view.add(diagramP.view);
+  }
 
   axisX = app.AxisX(diagram.view);
 
@@ -946,24 +952,23 @@ app.Chart = function (contest, chartIndex, chartName) {
   var maxColsLen = (data[0] || overview).columns.length - 1;
   info = app.Info(chart, diagram, scrollBar, buttons, isSingle, maxColsLen, overview.percentage, onDatMode);
 
+  function renderDiagram() {
+    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX);
+    diagramP && curDat !== overview && diagramP.moveToCircle(scrollBar.leftIndex, scrollBar.rightIndex, curDat);
+  }
+
   function onButtonClick() {
     scrollBar.renderDiagram();
-    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX);
+    renderDiagram();
   }
 
   function onRangeChange() {
     header.setRange(scrollBar.leftIndex, scrollBar.rightIndex);
-    diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX);
+    renderDiagram();
   }
 
   function onOverMode() {
-    isInited = true;
-    isOverMode = true;
-
-    diagram.show();
-    info.show();
-    axisX.show();
-    hLines.show();
+    curDat = overview;
 
     header.setOver(overview);
     buttons.setOver(overview);
@@ -972,8 +977,20 @@ app.Chart = function (contest, chartIndex, chartName) {
     axisX.setOver(overview);
     hLines.setOver(overview);
     info.setOver(overview);
+
+    if (diagramP && isInited) {
+      diagramP.moveToSquare(leftIndex, rightIndex, diagram, true);
+      diagramP.hide();
+      diagram.show();
+      info.show();
+      axisX.show();
+      hLines.show();
+    }
+
     scrollBar.setRange(leftIndex, rightIndex);
     scrollBar.renderDiagram();
+    isInited = true;
+    isOverMode = true;
   }
 
   function onDatMode(i) {
@@ -986,6 +1003,7 @@ app.Chart = function (contest, chartIndex, chartName) {
       dat = createDailyDat(overview, scrollBar.leftIndex + i);
     }
 
+    curDat = dat;
     leftIndex = scrollBar.leftIndex;
     rightIndex = scrollBar.rightIndex;
 
@@ -1007,11 +1025,15 @@ app.Chart = function (contest, chartIndex, chartName) {
     if (dat.percentage) {
       newLeftIndex = Math.floor((dat.columns[0].length - 2) / 2);
       scrollBar.setRange(newLeftIndex, newLeftIndex + 1);
+
+      diagramP.show();
+      diagramP.moveToSquare(leftIndex, rightIndex, diagram);
+      diagramP.moveToCircle(scrollBar.leftIndex, scrollBar.rightIndex, dat);
     } else {
       newLeftIndex = Math.floor((dat.columns[0].length - 2) / 2 / 24) * 24;
-      scrollBar.setRange(newLeftIndex, newLeftIndex + 24);
 
       diagram.setDat(dat);
+      scrollBar.setRange(newLeftIndex, newLeftIndex + 24);
     }
 
     scrollBar.renderDiagram();
@@ -1052,6 +1074,10 @@ app.Chart = function (contest, chartIndex, chartName) {
       info.setMode(isNight, bgColor);
       diagram.bgColor = bgColor;
       scrollBar.diagram.bgColor = bgColor;
+
+      if (diagramP) {
+        diagramP.setConfig({bgColor: bgColor, colors: config.lines});
+      }
 
       if (isInited) {
         info.render();
@@ -1467,40 +1493,194 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
   }
 };
 
-app.DiagramP = function (width, height, buttons, hLines, addReserve) {
-  var canvas, ctx;
+function Sprite(view) {
+  var text = new app.E('div');
+  text.e.style.fontWeight = 'bold';
+  text.e.style.color = '#ffffff';
+  text.e.style.textShadow = '1px 1px 5px rgba(0,0,0,0.5)';
+  text.sC('pointer');
+  text.bounds = {width: 0, height: 0};
+  view.add(text);
+
+  this.x = 0;
+  this.y = 0;
+  this.startAngle = 0;
+  this.endAngle = 0;
+  this.radius = 0;
+  this.color = '#ffffff';
+  this.sum = 0;
+  this.percent = 0;
+  this.text = text;
+  this.target = {x: 0, y: 0, startAngle: 0, endAngle: 0, radius: 0};
+}
+
+Sprite.prototype.update = function () {
+  var speed = 0.2;
+  this.x += (this.target.x - this.x) * speed;
+  this.y += (this.target.y - this.y) * speed;
+  this.startAngle += (this.target.startAngle - this.startAngle) * speed;
+  this.endAngle += (this.target.endAngle - this.endAngle) * speed;
+  this.radius += (this.target.radius - this.radius) * speed;
+
+  if (this.percent !== 0) {
+    var mAngle = (this.startAngle + this.endAngle) * 0.5;
+    var dist = this.radius * (0.7 - this.percent * 0.01 * 0.3);
+    this.text.sX(this.x + Math.cos(mAngle) * dist - this.text.bounds.width * 0.5);
+    this.text.sY(this.y + Math.sin(mAngle) * dist - this.text.bounds.height * 0.5);
+  }
+};
+
+Sprite.prototype.render = function (ctx) {
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.radius, this.startAngle, this.endAngle);
+  ctx.lineTo(this.x, this.y);
+  ctx.fillStyle = this.color;
+  ctx.fill();
+};
+
+app.DiagramP = function (width, height, buttons) {
+  var canvas, ctx,
+    centerX = width * 0.5,
+    centerY = height * 0.5,
+    radius = 115, isDisabled = true, sprites = [], sprite, config = {};
 
   var view = new app.E('div');
+  view.e.style.overflow = 'hidden';
+  view.sC('tween');
   view.sW(width);
   view.sH(height);
+  view.e.style.visibility = 'hidden';
 
   canvas = document.createElement('canvas');
   ctx = canvas.getContext('2d', {alpha: false});
   canvas.width = width;
   canvas.height = height;
-  canvas.style.transform = 'scale(1, -1)';
   canvas.style.height = height + 'px';
   canvas.style.position = 'absolute';
   view.e.appendChild(canvas);
 
+  for (var i = 0; i < 6; i++) {
+    sprite = new Sprite(view);
+    sprite.x = centerX;
+    sprite.y = centerY;
+    sprite.radius = radius;
+    sprite.id = 'y' + i;
+    sprites.push(sprite);
+
+    sprite.text.onDown(onClick.bind(this, sprite));
+  }
+
+  function onClick(sprite) {
+    for (var i = 0; i < sprites.length; i++) {
+      sprites[i].target.x = centerX;
+      sprites[i].target.y = centerY;
+    }
+
+    var mAngle = (sprite.startAngle + sprite.endAngle) / 2;
+    sprite.target.x = centerX + Math.cos(mAngle) * 10;
+    sprite.target.y = centerY + Math.sin(mAngle) * 10;
+  }
+
+  function hide() {
+    isDisabled = true;
+    view.e.style.visibility = 'hidden';
+  }
+
+  (function render() {
+    requestAnimationFrame(render);
+
+    if (isDisabled) return;
+
+    ctx.fillStyle = config.bgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var i, sprite;
+
+    for (i = 0; i < sprites.length; i++) {
+      sprite = sprites[i];
+      sprite.color = config.colors[sprite.id];
+      sprite.update();
+      sprite.render(ctx);
+    }
+  }());
+
   return {
     view: view,
-    bgColor: '#ffffff',
-    overlayLayer: new app.E('div'),
 
-    setOver: function (overview) {
+    moveToSquare: function (leftIndex, rightIndex, diagram, slide) {
+      var i, sprite, target;
 
+      if (slide) {
+        for (i = 0; i < sprites.length; i++) {
+          target = sprites[i].target;
+          target.radius = 400;
+          target.startAngle -= 0.4;
+          target.endAngle -= 0.4;
+        }
+      } else {
+        for (i = 0; i < sprites.length; i++) {
+          sprite = slide ? sprites[i].target : sprites[i];
+          sprite.x = width;
+          sprite.y = diagram.getPercent(i, rightIndex) * height * 0.01;
+          sprite.startAngle = Math.atan2(height, sprite.x);
+          sprite.endAngle = Math.atan2(diagram.getPercent(i, leftIndex) * height * 0.01, 0);
+          sprite.radius = 2000;
+        }
+      }
     },
 
-    setDat: function (dat) {
+    moveToCircle: function (leftIndex, rightIndex, dat) {
+      if (isDisabled) return;
+      leftIndex += 1;
+      rightIndex += 1;
+
+      var i, j, sprite, col, total = 0, percMult, degreesMult;
+
+      for (i = 1; i < dat.columns.length; i++) {
+        sprite = sprites[i - 1];
+        sprite.sum = 0;
+
+        if (!buttons.views[i - 1].isActive) continue;
+        col = dat.columns[i];
+
+        for (j = leftIndex; j <= rightIndex; j++) {
+          sprite.sum += col[j];
+        }
+
+        total += sprite.sum;
+      }
+
+      degreesMult = Math.PI * 2 / total;
+      percMult = 100 / total;
+
+      for (i = 0; i < sprites.length; i++) {
+        sprite = sprites[i];
+        sprite.percent = sprite.sum * percMult;
+        sprite.text.sT(sprite.percent === 0 ? '' : sprite.percent.toFixed(0) + '%');
+        sprite.text.e.style.fontSize = 14 + sprite.percent / 100 * 18 + 'px';
+        sprite.text.bounds = sprite.text.e.getBoundingClientRect();
+        sprite.target.x = centerX;
+        sprite.target.y = centerY;
+
+        sprite.target.startAngle = i === 0 ? 0 : sprites[i - 1].target.endAngle;
+        sprite.target.endAngle = sprite.target.startAngle + sprite.sum * degreesMult;
+        sprite.target.radius = radius;
+      }
     },
 
-    getY: function (colIndex, index) {
-      // return (cols[colIndex][index] - minY[colIndex]) * scaleY[colIndex];
+    show: function () {
+      isDisabled = false;
+      view.e.style.visibility = 'visible';
+      view.sO(1);
     },
 
-    render: function (leftIndex, rightIndex, axisX, axesY) {
+    hide: function () {
+      view.sO(0);
+      setTimeout(hide, 400);
+    },
 
+    setConfig(conf) {
+      config = conf;
     }
   }
 };

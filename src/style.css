@@ -126,12 +126,12 @@ canvas {
     transition: all 140ms ease-out;
 }
 
-.tween-alpha {
-    transition: opacity 200ms ease-out;
-}
-
-.tween-scale {
-    /*transition: scale 150ms ease-out;*/
+.tweeen {
+    -webkit-transition: all 400ms ease-out;
+    -moz-transition: all 400ms ease-out;
+    -ms-transition: all 400ms ease-out;
+    -o-transition: all 400ms ease-out;
+    transition: all 400ms ease-out;
 }
 
 .title {
@@ -162,6 +162,7 @@ canvas {
     font-weight: bold;
     float: right;
     position: relative !important;
+    font-size: 13px;
 }
 
 i {
