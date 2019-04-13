@@ -127,7 +127,7 @@ app.Header = function (parent, cb) {
     title, zoomOut, zoomOutContainer, data, rangeText, icon,
     dayMs = 1000 * 60 * 60 * 24,
     monthMs = dayMs * 31,
-    rangeTexts = [],
+    rangeTexts = [];
 
   title = new app.E('div');
   title.sT('Statistic');
@@ -182,6 +182,7 @@ app.Header = function (parent, cb) {
     var leftDate = new Date(leftTime);
     var rightDate = new Date(rightTime);
     var res = [
+      '', '',
       leftDate.getUTCDate() + '&nbsp;',
       app.months[leftDate.getUTCMonth()] + '&nbsp;',
       String(leftDate.getUTCFullYear())
@@ -192,11 +193,10 @@ app.Header = function (parent, cb) {
         '&nbsp;-&nbsp;',
         rightDate.getUTCDate() + '&nbsp;',
         app.months[rightDate.getUTCMonth()] + '&nbsp;',
-        String(rightDate.getUTCFullYear()),
-        '', ''
+        String(rightDate.getUTCFullYear())
       );
     } else {
-      res.push('', '', '', '', '', '');
+      res.unshift('', '', '', '');
     }
 
     return res;
@@ -267,16 +267,18 @@ app.Header = function (parent, cb) {
 };
 
 app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
-  var index = 0,
+  var index = 0, i, j,
     bgInputEnabled = false,
     nameEls = [],
     valueEls = [],
     view, line, bg, colX, cols,
-    mainText,
     arrow,
     isBar,
     overlayLeft, overlayRight,
     circleHash = {},
+    mainTexts = [[], []],
+    mainTextContainer,
+    getMainText = getMainTextOverview,
     days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut', 'Sun'],
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -315,11 +317,21 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
   bg.onDown(onBgClick);
   view.add(bg);
 
-  mainText = new app.E('div');
-  mainText.sC('info-main-text');
-  mainText.sX(10);
-  mainText.sY(4);
-  bg.add(mainText);
+  mainTextContainer = new app.E('div');
+  mainTextContainer.sX(10);
+  mainTextContainer.sY(4);
+  bg.add(mainTextContainer);
+
+  for (j = 0; j < 5; j++) {
+    for (i = 0; i < 2; i++) {
+      var mainText = new app.E('div');
+      mainText.sC('info-main-text');
+      mainText.sC('tween');
+      mainTextContainer.add(mainText);
+
+      mainTexts[i][j] = mainText;
+    }
+  }
 
   arrow = document.createElement('i');
   arrow.classList.add('arrow-right');
@@ -328,7 +340,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
   arrow.style.position = 'absolute';
   bg.e.appendChild(arrow);
 
-  for (var i = 0; i < 7; i++) {
+  for (i = 0; i < 7; i++) {
     var nameEl = new app.E('div');
     bg.add(nameEl);
     nameEl.sC('info-name');
@@ -395,10 +407,33 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     cb(index);
   }
 
+  function getMainTextOverview(date) {
+    return [
+      days[date.getUTCDay()],
+      ',&nbsp;',
+      months[date.getUTCMonth()] + '&nbsp;',
+      date.getUTCDate() + '&nbsp;',
+      String(date.getUTCFullYear())
+    ];
+  }
+
+  function getMainTextDat(date) {
+    var hours = date.getUTCHours();
+    var mins = date.getUTCMinutes();
+
+    return [
+      hours < 10 ? '0' : '',
+      String(hours),
+      ':',
+      mins < 10 ? '0' : '',
+      String(mins)
+    ];
+  }
+
   function render() {
     var localY = chart.getInputY() - diagram.view.y,
       localX = chart.getInputX() - diagram.view.x,
-      len, step;
+      len, step, i, j, y, n, l, tmp;
 
     len = scrollBar.rightIndex - scrollBar.leftIndex;
     step = diagram.view.w / len;
@@ -431,7 +466,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       }
     }
 
-    for (var i = 0, n = 0, l = nameEls.length, date, y; i < l; i++) {
+    for (i = 0, n = 0, l = nameEls.length; i < l; i++) {
       if (!buttons.views[i] || !buttons.views[i].isActive) {
         nameEls[i].sO(0);
         valueEls[i].sO(0);
@@ -449,9 +484,22 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       n++;
     }
 
-    date = new Date(colX[scrollBar.leftIndex + index + 1]);
-    mainText.sT(days[date.getUTCDay()] + ', ' + months[date.getUTCMonth()] + ' ' + date.getUTCDate() + ' ' + date.getUTCFullYear());
     bg.sH(30 + n * 20);
+    var mainText = getMainText(new Date(colX[scrollBar.leftIndex + index + 1]));
+
+    for (j = 0; j < mainText.length; j++) {
+      if (mainText[j] !== mainTexts[0][j].e.innerHTML) {
+        mainTexts[0][j].sS(1, 0);
+        mainTexts[0][j].sT('');
+
+        tmp = mainTexts[1][j];
+        tmp.e.innerHTML = mainText[j];
+        tmp.sS(1, 1);
+
+        mainTexts[1][j] = mainTexts[0][j];
+        mainTexts[0][j] = tmp;
+      }
+    }
   }
 
   function reset(dat) {
@@ -465,12 +513,14 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       reset(overview);
       isBar = overview.types.y0 === 'bar';
       arrow.style.visibility = 'visible';
+      getMainText = getMainTextOverview;
     },
 
     setDat: function (dat) {
       reset(dat);
       isBar = dat.types.y0 === 'bar' && !isSingle;
       arrow.style.visibility = 'hidden';
+      getMainText = getMainTextDat;
     }
   }
 };
@@ -810,7 +860,9 @@ app.Chart = function (contest, chartIndex) {
     axisX.setDat(dat);
     hLines.setDat(dat);
     info.setDat(dat);
-    scrollBar.setRange(0, Math.min(36, dat.columns[0].length - 2));
+
+    var newLeftIndex = Math.floor((dat.columns[0].length - 1) / 2 / 24) * 24;
+    scrollBar.setRange(newLeftIndex, newLeftIndex + 24);
     scrollBar.renderDiagram();
   }
 
