@@ -93,6 +93,14 @@ app.HLines = function (axes) {
       reset(dat);
     },
 
+    show: function () {
+      view.sO(1);
+    },
+
+    hide: function () {
+      view.sO(0);
+    },
+
     render: function (minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffsetY) {
       var i, j, y, text;
       oldHash = hash;
@@ -301,6 +309,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
     getMainText = getMainTextOverview,
     defaultTextColor = '#000000',
     cirleBgColor = '#ffffff',
+    isDisabled = false,
     days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut', 'Sun'],
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -383,6 +392,8 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
   }
 
   diagram.view.onDown(function () {
+    if (isDisabled) return;
+
     view.sO(1);
     diagram.overlayLayer.sO(1);
 
@@ -405,6 +416,8 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
   }
 
   app.i.downHandlers.push(function () {
+    if (isDisabled) return;
+
     var localY = chart.getInputY() - diagram.view.y;
 
     if (localY < 0 || localY > diagram.view.h) {
@@ -450,12 +463,14 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
     ];
   }
 
-  function show(elem, text) {
+  function showEl(elem, text) {
     elem.sS(1, 1);
     elem.e.innerHTML = text;
   }
 
   function render() {
+    if (isDisabled) return;
+
     var localY = chart.getInputY() - diagram.view.y,
       localX = chart.getInputX() - diagram.view.x,
       len, step, i, j, y, n, l, sum, value, valueEl, nameEl, percEl, btnName, btnColor;
@@ -465,7 +480,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
 
     if (localY < 0 || localY > diagram.view.h || localX < 0 || localX > diagram.view.w + step) return;
 
-    index = Math.min(scrollBar.rightIndex - (isBar ? 1 : 0), Math.floor(localX / step));
+    index = Math.min(scrollBar.rightIndex - (isBar && !isPercentage ? 1 : 0), Math.floor(localX / step));
     localX = index * step;
 
     bg.e.style.top = Math.max(-10, Math.min(diagram.view.h - bg.h - 10, localY - bg.h - 60)) + 'px';
@@ -556,7 +571,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
         mainTexts[j].sS(1, 0);
         mainTexts[j].e.innerHTML = newTexts[j];
 
-        setTimeout(show, 80, mainTexts[j], newTexts[j]);
+        setTimeout(showEl, 80, mainTexts[j], newTexts[j]);
       }
     }
   }
@@ -592,7 +607,17 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
       cirleBgColor = bgColor;
     },
 
-    render: render
+    render: render,
+
+    show: function () {
+      isDisabled = false;
+    },
+
+    hide: function () {
+      isDisabled = true;
+      view.sO(0);
+      diagram.overlayLayer.sO(0);
+    }
   }
 };
 
@@ -812,6 +837,14 @@ app.AxisX = function (parent) {
       }
     },
 
+    show: function () {
+      view.sO(1);
+    },
+
+    hide: function () {
+      view.sO(0);
+    },
+
     render: function (leftIndex, rightIndex, scaleX) {
       var desOffset = Math.floor((rightIndex - leftIndex) / 5);
       var offset = 1;
@@ -876,7 +909,7 @@ app.Chart = function (contest, chartIndex, chartName) {
     isSingle = chartIndex === 3,
     rightIndex = Math.min(90, overview.columns[0].length - 2),
     body = document.body,
-    index, view, diagram, axisX, buttons, header, scrollBar, info, hLines, isOverMode, isInited;
+    view, diagram, axisX, buttons, header, scrollBar, info, hLines, isOverMode, isInited;
 
   var chart = {
     getInputX: function getInputX() {
@@ -926,6 +959,12 @@ app.Chart = function (contest, chartIndex, chartName) {
   function onOverMode() {
     isInited = true;
     isOverMode = true;
+
+    diagram.show();
+    info.show();
+    axisX.show();
+    hLines.show();
+
     header.setOver(overview);
     buttons.setOver(overview);
     scrollBar.setOver(overview);
@@ -941,23 +980,60 @@ app.Chart = function (contest, chartIndex, chartName) {
     if (!isOverMode) return;
     isOverMode = false;
 
-    var dat = data[i] || overview;
+    var dat = data[i], newLeftIndex;
+
+    if (!dat) { // percentage
+      dat = createDailyDat(overview, scrollBar.leftIndex + i);
+    }
+
     leftIndex = scrollBar.leftIndex;
     rightIndex = scrollBar.rightIndex;
-    index = i;
+
+    if (dat.percentage) {
+      diagram.hide();
+      info.hide();
+      axisX.hide();
+      hLines.hide();
+    }
 
     header.setDat(dat);
     buttons.setDat(dat);
     scrollBar.setDat(dat);
     scrollBar.setDat(dat);
-    diagram.setDat(dat);
     axisX.setDat(dat);
     hLines.setDat(dat);
     info.setDat(dat);
 
-    var newLeftIndex = Math.floor((dat.columns[0].length - 1) / 2 / 24) * 24;
-    scrollBar.setRange(newLeftIndex, newLeftIndex + 24);
+    if (dat.percentage) {
+      newLeftIndex = Math.floor((dat.columns[0].length - 2) / 2);
+      scrollBar.setRange(newLeftIndex, newLeftIndex + 1);
+    } else {
+      newLeftIndex = Math.floor((dat.columns[0].length - 2) / 2 / 24) * 24;
+      scrollBar.setRange(newLeftIndex, newLeftIndex + 24);
+
+      diagram.setDat(dat);
+    }
+
     scrollBar.renderDiagram();
+  }
+
+  function createDailyDat(overview, index) {
+    var start = Math.max(1, Math.min(overview.columns[0].length - 8, index - 2));
+    var res = {};
+
+    for (var key in overview) {
+      res[key] = overview[key];
+    }
+
+    res.columns = overview.columns.slice();
+
+    for (var i = 0; i < res.columns.length; i++) {
+      var col = res.columns[i].slice(start, start + 8);
+      col.unshift(res.columns[i][0]);
+      res.columns[i] = col;
+    }
+
+    return res;
   }
 
   return {
@@ -1000,6 +1076,8 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
     curDat,
     calcBounds,
     multipliers,// percentage
+    isOverview = true,
+    isDisabled = false,
     canvasReserveX = addReserve ? 400 : 0, modeConfig;
 
   var view = new app.E('div');
@@ -1100,11 +1178,13 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
     overlayLayer: overlayLayer,
 
     setOver: function (overview) {
+      isOverview = true;
       stacked = overview.stacked || isSingle;
       init(overview);
     },
 
     setDat: function (dat) {
+      isOverview = false;
       stacked = dat.stacked;
       init(dat);
     },
@@ -1122,6 +1202,8 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
     },
 
     render: function (leftIndex, rightIndex, axisX) {
+      if (isDisabled) return;
+
       var i, newLeftIndex, newRightIndex;
 
       var reservedIndex = Math.ceil((rightIndex - leftIndex));
@@ -1185,6 +1267,16 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
       maxX = colX[newRightIndex];
 
       render(newLeftIndex, newRightIndex);
+    },
+
+    show: function () {
+      isDisabled = false;
+      view.sO(1);
+    },
+
+    hide: function () {
+      isDisabled = true;
+      view.sO(0);
     }
   };
 
@@ -1252,12 +1344,22 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
 
       ctx.beginPath();
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, stack[leftIndex] * mainScaleY);
 
-      for (j = leftIndex; j <= rightIndex; j++, x += offsetX) {
-        y = stack[j] * mainScaleY;
-        stack[j] -= col[j] * multipliers[j];
-        ctx.lineTo(x, y);
+      if (isOverview) {
+        ctx.lineTo(x, stack[leftIndex] * mainScaleY);
+
+        for (j = leftIndex; j <= rightIndex; j++, x += offsetX) {
+          y = stack[j] * mainScaleY;
+          stack[j] -= col[j] * multipliers[j];
+          ctx.lineTo(x, y);
+        }
+      } else {
+        for (j = leftIndex; j <= rightIndex; j++, x += offsetX) {
+          y = stack[j] * mainScaleY;
+          stack[j] -= col[j] * multipliers[j];
+          ctx.lineTo(x, y);
+          ctx.lineTo(x + offsetX, y);
+        }
       }
 
       ctx.lineTo(x, 0);
@@ -1473,7 +1575,7 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
 
     for (i = 2, l = colX.length - 1; i < l; i++) {
       if (checkCb(new Date(colX[i]), i)) {
-        anchorsX.push((i - 1) / (l - 2) * width);
+        anchorsX.push((i - 1) / (l - 1) * width);
         anchorsMap.push(i - 1);
       }
     }
@@ -1509,6 +1611,10 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
       if (isSingle) {
         updateAnchors(dat, function (date, i) {
           return i % 36 === 1;
+        });
+      } else if (dat.percentage) {
+        updateAnchors(dat, function (date) {
+          return true;
         });
       } else {
         updateAnchors(dat, function (date) {
@@ -1568,7 +1674,7 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
   }
 
   function getIndex(x) {
-    var i = 0, l = anchorsX.length, d, index = 0;
+    var i = 0, l = anchorsX.length, d, index = 1;
     var minDist = Number.MAX_VALUE;
 
     for (; i < l; i++) {
