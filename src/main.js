@@ -1,5 +1,6 @@
 app.HLines = function (axes) {
-  var lines = [], line, hash = {}, oldHash = {}, prevMainMinY, prevScaleY;
+  var lines = [], line, hash = {}, oldHash = {}, prevMainMinY, prevScaleY,
+    lineColor = '#ffffff', textColor = '#ffffff';
 
   var view = new app.E('div');
   view.sY(250);
@@ -33,6 +34,8 @@ app.HLines = function (axes) {
       line.texts.push(text);
     }
 
+    setLineColor(line, lineColor, textColor);
+
     return line;
   }
 
@@ -58,17 +61,23 @@ app.HLines = function (axes) {
     hash = {};
   }
 
+  function setLineColor(line, color, textColor) {
+    line.e.style.backgroundColor = color;
+    line.e.style.color = textColor;
+  }
+
   return {
-    setMode: function (isNight) {
-      var color = isNight ? 'rgba(255,255,255,0.1)' : 'rgba(24,45,59,0.1)';
-      lines.forEach(line => line.e.style.backgroundColor = color);
+    setMode: function (isNight, config) {
+      lineColor = isNight ? 'rgba(255,255,255,0.1)' : 'rgba(24,45,59,0.1)';
+      textColor = config.axisText.y || config.axisText;
+      lines.forEach(line => setLineColor(line, lineColor, textColor));
 
       for (var key in oldHash) {
-        oldHash[key].e.style.backgroundColor = color;
+        setLineColor(oldHash[key], lineColor, textColor);
       }
 
       for (var key in hash) {
-        hash[key].e.style.backgroundColor = color;
+        setLineColor(hash[key], lineColor, textColor);
       }
     },
 
@@ -175,18 +184,14 @@ app.Header = function (parent, chartName, cb) {
   rangeTextsContainer.e.style.right = '0px';
   parent.add(rangeTextsContainer);
 
-  rangeTexts.push([], []);
-
   for (var j = 0; j < 9; j++) {
-    for (var i = 0; i < 2; i++) {
-      rangeText = new app.E('div');
-      rangeText.sY(20);
-      rangeText.sC('range-text');
-      rangeText.sC('tween');
-      rangeText.sS(1, 0);
-      rangeTextsContainer.add(rangeText);
-      rangeTexts[i].push(rangeText);
-    }
+    rangeText = new app.E('div');
+    rangeText.sY(20);
+    rangeText.sC('range-text');
+    rangeText.sC('tween');
+    rangeText.sS(1, 0);
+    rangeTextsContainer.add(rangeText);
+    rangeTexts.push(rangeText);
   }
 
   function getDateStrOver(leftTime, rightTime) {
@@ -238,6 +243,11 @@ app.Header = function (parent, chartName, cb) {
     return res;
   }
 
+  function show(el, text) {
+    el.sS(1, 1);
+    el.e.innerHTML = text;
+  }
+
   return {
     setOver: function (overview) {
       data = overview;
@@ -256,32 +266,26 @@ app.Header = function (parent, chartName, cb) {
     },
 
     setMode: function (isNight) {
+      var defaultTextColor = isNight ? '#ffffff' : '#000000';
       zoomOut.e.style.color = isNight ? '#48AAF0' : '#108BE3';
+      title.e.style.color = defaultTextColor;
+      rangeTexts.forEach(text => text.e.style.color = defaultTextColor);
     },
 
     setRange: function (leftIndex, rightIndex) {
       var rowTexts = getDateStr(data.columns[0][leftIndex + 1], data.columns[0][rightIndex + 1]).reverse();
-      var mainRow = rangeTexts[0];
-      var backRow = rangeTexts[1];
 
-      for (var j = 0, tmp; j < rowTexts.length; j++) {
-        if (rowTexts[j] !== mainRow[j].e.innerHTML) {
-          mainRow[j].sS(1, 0);
-          mainRow[j].sT('');
-
-          tmp = backRow[j];
-          tmp.sS(1, 1);
-          tmp.e.innerHTML = rowTexts[j];
-
-          backRow[j] = mainRow[j];
-          mainRow[j] = tmp;
+      for (var j = 0; j < rowTexts.length; j++) {
+        if (rowTexts[j] !== rangeTexts[j].e.innerHTML) {
+          rangeTexts[j].sS(1, 0);
+          setTimeout(show, 80, rangeTexts[j], rowTexts[j]);
         }
       }
     }
   }
 };
 
-app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
+app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) {
   var index = 0, i, j,
     bgInputEnabled = false,
     nameEls = [],
@@ -290,87 +294,84 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     arrow,
     isBar,
     overlayLeft, overlayRight,
-    circleHash = {},
+    circles = [],
     mainTexts = [],
     mainTextContainer,
     getMainText = getMainTextOverview,
+    defaultTextColor = '#000000',
+    cirleBgColor = '#ffffff',
     days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sut', 'Sun'],
     months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  function init(colsLen) {
-    init = function () {
-    };
+  view = new app.E('div');
+  view.sC('tween');
+  view.sW(diagram.view.w);
+  view.sH(diagram.view.h);
+  view.sO(0);
+  view.sY(0);
+  diagram.view.add(view);
 
-    view = new app.E('div');
-    view.sC('tween');
-    view.sW(diagram.view.w);
-    view.sH(diagram.view.h);
-    view.sO(0);
-    view.sY(0);
-    diagram.view.add(view);
+  overlayLeft = new app.E('div');
+  overlayLeft.sW(0);
+  overlayLeft.sH(diagram.view.h);
+  overlayLeft.sC('info-overlay');
+  diagram.overlayLayer.add(overlayLeft);
 
-    overlayLeft = new app.E('div');
-    overlayLeft.sW(0);
-    overlayLeft.sH(diagram.view.h);
-    overlayLeft.sC('info-overlay');
-    diagram.overlayLayer.add(overlayLeft);
+  overlayRight = new app.E('div');
+  overlayRight.sW(0);
+  overlayRight.sH(diagram.view.h);
+  overlayRight.e.style.right = 0 + 'px';
+  overlayRight.sC('info-overlay');
+  diagram.overlayLayer.add(overlayRight);
 
-    overlayRight = new app.E('div');
-    overlayRight.sW(0);
-    overlayRight.sH(diagram.view.h);
-    overlayRight.e.style.right = 0 + 'px';
-    overlayRight.sC('info-overlay');
-    diagram.overlayLayer.add(overlayRight);
+  line = new app.E('div');
+  line.sW(2);
+  line.sY(0);
+  line.sH(diagram.view.h);
+  line.sC('info-line');
+  view.add(line);
 
-    line = new app.E('div');
-    line.sW(2);
-    line.sY(0);
-    line.sH(diagram.view.h);
-    line.sC('info-line');
-    view.add(line);
+  bg = new app.E('div');
+  bg.sC('info-bg');
+  bg.sW(140);
+  bg.sH(60);
+  bg.onDown(onBgClick);
+  view.add(bg);
 
-    bg = new app.E('div');
-    bg.sC('info-bg');
-    bg.sW(140);
-    bg.sH(60);
-    bg.onDown(onBgClick);
-    view.add(bg);
+  mainTextContainer = new app.E('div');
+  mainTextContainer.sX(10);
+  mainTextContainer.sY(4);
+  bg.add(mainTextContainer);
 
-    mainTextContainer = new app.E('div');
-    mainTextContainer.sX(10);
-    mainTextContainer.sY(4);
-    bg.add(mainTextContainer);
+  for (j = 0; j < 5; j++) {
+    var mainText = new app.E('div');
+    mainText.sC('info-main-text');
+    mainText.sC('tween');
+    mainTextContainer.add(mainText);
 
-    for (j = 0; j < 5; j++) {
-      var mainText = new app.E('div');
-      mainText.sC('info-main-text');
-      mainText.sC('tween');
-      mainTextContainer.add(mainText);
+    mainTexts[j] = mainText;
+  }
 
-      mainTexts[j] = mainText;
-    }
+  arrow = document.createElement('i');
+  arrow.classList.add('arrow-right');
+  arrow.style.right = 7 + 'px';
+  arrow.style.top = 7 + 'px';
+  arrow.style.position = 'absolute';
+  bg.e.appendChild(arrow);
 
-    arrow = document.createElement('i');
-    arrow.classList.add('arrow-right');
-    arrow.style.right = 7 + 'px';
-    arrow.style.top = 7 + 'px';
-    arrow.style.position = 'absolute';
-    bg.e.appendChild(arrow);
+  for (i = 0; i <= colsLen; i++) {
+    var nameEl = new app.E('div');
+    bg.add(nameEl);
+    nameEl.sC('info-name');
+    nameEl.sX(10);
+    nameEls.push(nameEl);
 
-    for (i = 0; i <= colsLen; i++) {
-      var nameEl = new app.E('div');
-      bg.add(nameEl);
-      nameEl.sC('info-name');
-      nameEl.sX(10);
-      nameEls.push(nameEl);
-
-      var valueEl = new app.E('div');
-      valueEl.sC('info-val');
-      valueEl.sC('tween');
-      valueEl.e.style.right = 8 + 'px';
-      bg.add(valueEl);
-      valueEls.push(valueEl);
-    }
+    var valueEl = new app.E('div');
+    valueEl.sC('info-val');
+    valueEl.sC('tween');
+    valueEl.e.style.right = 8 + 'px';
+    bg.add(valueEl);
+    valueEls.push(valueEl);
   }
 
   diagram.view.onDown(function () {
@@ -384,22 +385,15 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     }, 0);
   });
 
-  function getCircle(color) {
-    if (circleHash[color]) {
-      return circleHash[color];
-    }
-
+  for (i = 0; i < colsLen; i++) {
     var circle = new app.E('div');
     circle.sW(8);
     circle.sH(8);
     circle.sX(-6);
-    circle.e.style.backgroundColor = '#ffffff';
-    circle.e.style.border = '2px solid ' + color;
+    circle.e.style.border = '2px solid';
     circle.e.style.borderRadius = '6px';
-    circleHash[color] = circle;
+    circles.push(circle);
     line.add(circle);
-
-    return circle;
   }
 
   app.i.downHandlers.push(function () {
@@ -448,10 +442,9 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
     ];
   }
 
-  function showElems(elems) {
-    for (var i = 0, l = elems.length; i < l; i++) {
-      elems[i].sS(1, 1);
-    }
+  function show(elem, text) {
+    elem.sS(1, 1);
+    elem.e.innerHTML = text;
   }
 
   function render() {
@@ -485,8 +478,16 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       line.sX(localX);
 
       for (i = 0; i < buttons.views.length; i++) {
-        var circle = getCircle(buttons.views[i].color);
-        circle.sY(diagram.view.h - diagram.getY(i, scrollBar.leftIndex + index) + circle.x);
+        var circle = circles[i];
+
+        if (buttons.views[i].isActive) {
+          circle.e.style.backgroundColor = cirleBgColor;
+          circle.e.style.borderColor = buttons.views[i].tooltipColor;
+          circle.sY(diagram.view.h - diagram.getY(i, scrollBar.leftIndex + index) + circle.x);
+          circle.sO(1);
+        } else {
+          circle.sO(0);
+        }
       }
     }
 
@@ -497,7 +498,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       if (i === buttons.views.length && i > 1 && !isSingle) {
         value = app.format(sum);
         btnName = 'All';
-        btnColor = '#000000';
+        btnColor = defaultTextColor;
         valueEl.sC('bold');
       } else if (!buttons.views[i] || !buttons.views[i].isActive) {
         nameEl.sS(1, 0);
@@ -510,7 +511,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
         sum += cols[i][index + 1];
         value = app.format(cols[i][index + 1]);
         btnName = buttons.views[i].name;
-        btnColor = buttons.views[i].color;
+        btnColor = buttons.views[i].tooltipColor;
         valueEl.rC('bold');
       }
 
@@ -520,29 +521,30 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       nameEl.sS(1, 1);
       valueEl.sS(1, 1);
       nameEl.sT(btnName);
-      valueEl.e.style.color = btnColor;
+      nameEl.e.style.color = defaultTextColor;
+      valueEl.e.style.color = btnColor || defaultTextColor;
 
-      if (valueEls[i].e.innerText !== value) {
-        valueEl.sT(value);
+      if (valueEls[i].e.innerHTML !== value) {
         valueEl.sS(1, 0);
-        elemsToShow.push(valueEl);
+        setTimeout(show, 80, valueEl, value);
       }
 
       n++;
     }
 
     bg.sH(30 + n * 20);
-    var mainText = getMainText(new Date(colX[scrollBar.leftIndex + index + 1]));
+    var newTexts = getMainText(new Date(colX[scrollBar.leftIndex + index + 1]));
 
-    for (j = 0; j < mainText.length; j++) {
-      if (mainText[j] !== mainTexts[j].e.innerHTML) {
+    for (j = 0; j < newTexts.length; j++) {
+      mainTexts[j].e.style.color = defaultTextColor;
+
+      if (newTexts[j] !== mainTexts[j].e.innerHTML) {
         mainTexts[j].sS(1, 0);
-        mainTexts[j].e.innerHTML = mainText[j];
-        elemsToShow.push(mainTexts[j]);
+        mainTexts[j].e.innerHTML = newTexts[j];
+
+        setTimeout(show, 80, mainTexts[j], newTexts[j]);
       }
     }
-
-    setTimeout(showElems, 80, elemsToShow);
   }
 
   function reset(dat) {
@@ -552,8 +554,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
   }
 
   return {
-    setOver: function (overview, dat) {
-      init(dat.columns.length);
+    setOver: function (overview) {
       reset(overview);
       isBar = overview.types.y0 === 'bar';
       arrow.style.visibility = 'visible';
@@ -565,7 +566,19 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, cb) {
       isBar = dat.types.y0 === 'bar' && !isSingle;
       arrow.style.visibility = 'hidden';
       getMainText = getMainTextDat;
-    }
+    },
+
+    setMode: function (isNight, bgColor) {
+      var overlayColor = isNight ? 'rgba(36,47,62,0.5)' : 'rgba(255,255,255,0.5)';
+      overlayLeft.e.style.backgroundColor = overlayColor;
+      overlayRight.e.style.backgroundColor = overlayColor;
+      bg.e.style.backgroundColor = isNight ? '#1C2533' : '#ffffff';
+      arrow.style.borderColor = isNight ? '#D2D5D7' : '#D2D5D7';
+      defaultTextColor = isNight ? '#ffffff' : '#000000';
+      cirleBgColor = bgColor;
+    },
+
+    render: render
   }
 };
 
@@ -683,6 +696,7 @@ app.Buttons = function (parent, isSingle, dat, cb) {
     setMode: function (isNight, config) {
       buttons.forEach((button, i) => {
         button.e.style.backgroundColor = config.buttons[dat.columns[i + 1][0]];
+        button.tooltipColor = config.tooltip[dat.columns[i + 1][0]];
       });
     },
 
@@ -692,7 +706,7 @@ app.Buttons = function (parent, isSingle, dat, cb) {
 
 app.AxisX = function (parent) {
   var elems = [], prevLeftIndex, prevScaleX;
-  var hash = {}, oldHash, colX, texts;
+  var hash = {}, oldHash = {}, colX, texts, textColor = '#ffffff';
   app.months = ['Jan', 'Fab', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   var view = new app.E('div');
@@ -704,6 +718,7 @@ app.AxisX = function (parent) {
     elem.sT(0);
     elem.sW(50);
     elem.sY(6);
+    elem.e.style.color = textColor;
     parent.add(elem);
 
     return elem;
@@ -753,6 +768,19 @@ app.AxisX = function (parent) {
 
         return (hours < 10 ? '0' : '') + hours + ':' + (mins < 10 ? '0' : '') + mins;
       });
+    },
+
+    setMode: function (isNight, config) {
+      textColor = config.axisText.x || config.axisText;
+      elems.forEach(elem => elem.e.style.color = textColor);
+
+      for (var key in oldHash) {
+        oldHash[key].e.style.color = textColor;
+      }
+
+      for (var key in hash) {
+        hash[key].e.style.color = textColor;
+      }
     },
 
     render: function (leftIndex, rightIndex, scaleX) {
@@ -819,7 +847,7 @@ app.Chart = function (contest, chartIndex, chartName) {
     isSingle = chartIndex === 3,
     rightIndex = Math.min(90, overview.columns[0].length - 2),
     body = document.body,
-    index, view, diagram, axisX, buttons, header, scrollBar, info, hLines, isOverMode;
+    index, view, diagram, axisX, buttons, header, scrollBar, info, hLines, isOverMode, isInited;
 
   var chart = {
     getInputX: function getInputX() {
@@ -853,7 +881,8 @@ app.Chart = function (contest, chartIndex, chartName) {
   scrollBar = app.ScrollBar(chart, buttons, isSingle, onRangeChange);
   view.add(scrollBar.view);
 
-  info = app.Info(chart, diagram, scrollBar, buttons, isSingle, onDatMode);
+  var maxColsLen = (data[0] || overview).columns.length - 1;
+  info = app.Info(chart, diagram, scrollBar, buttons, isSingle, maxColsLen, onDatMode);
 
   function onButtonClick() {
     scrollBar.renderDiagram();
@@ -866,6 +895,7 @@ app.Chart = function (contest, chartIndex, chartName) {
   }
 
   function onOverMode() {
+    isInited = true;
     isOverMode = true;
     header.setOver(overview);
     buttons.setOver(overview);
@@ -873,7 +903,7 @@ app.Chart = function (contest, chartIndex, chartName) {
     diagram.setOver(overview);
     axisX.setOver(overview);
     hLines.setOver(overview);
-    info.setOver(overview, data[0] || overview);
+    info.setOver(overview);
     scrollBar.setRange(leftIndex, rightIndex);
     scrollBar.renderDiagram();
   }
@@ -905,19 +935,24 @@ app.Chart = function (contest, chartIndex, chartName) {
     view: view,
     onOverMode: onOverMode,
 
-    setMode: function (isNight) {
+    setMode: function (isNight, bgColor) {
       var config = app.config[isNight ? 'night' : 'day'][chartIndex];
 
       diagram.setMode(isNight, config);
-      scrollBar.diagram.setMode(isNight, config);
+      scrollBar.setMode(isNight, config);
       buttons.setMode(isNight, config);
-      // info.setMode(isNight, config);
-      //
-      // hLines.setMode(isNight, config);
-      // axisX.setMode(isNight, config);
-      // header.setMode(isNight);
-      // diagram.bgColor = '#ffffff';
-      // scrollBar.diagram.bgColor = '#ffffff'; // 'rgba(226,238,249,0.6)';
+      hLines.setMode(isNight, config);
+      axisX.setMode(isNight, config);
+      header.setMode(isNight);
+      info.setMode(isNight, bgColor);
+      diagram.bgColor = bgColor;
+      scrollBar.diagram.bgColor = bgColor;
+
+      if (isInited) {
+        info.render();
+        diagram.render(scrollBar.leftIndex, scrollBar.rightIndex, axisX);
+        scrollBar.renderDiagram();
+      }
     }
   };
 };
@@ -1048,7 +1083,7 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
       return (cols[colIndex][index] - minY[colIndex]) * scaleY[colIndex];
     },
 
-    render: function (leftIndex, rightIndex, axisX, axesY) {
+    render: function (leftIndex, rightIndex, axisX) {
       var i, newLeftIndex, newRightIndex;
 
       var reservedIndex = Math.ceil((rightIndex - leftIndex));
@@ -1077,7 +1112,7 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
       if (mainMinY === Number.MAX_VALUE) return;
 
       axisX && axisX.render(leftIndex, rightIndex, scaleX);
-      hLines && hLines.render(minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffset, axesY);
+      hLines && hLines.render(minY, scaleY, offsetY, mainMinY, mainScaleY, mainOffset);
 
       if (!animate) {
         animate = true;
@@ -1391,7 +1426,8 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
       }
     },
 
-    setMode: function (isNight) {
+    setMode: function (isNight, config) {
+      diagram.setMode(isNight, config);
       var overlayColor = isNight ? 'rgba(48,66,89,0.6)' : 'rgba(226,238,249,0.6)';
       var sideColor = isNight ? '#56626D' : '#C0D1E1';
       frame.e.style.borderColor = sideColor;
@@ -1649,7 +1685,7 @@ window.addEventListener('load', function () {
 
   for (var i = 0; i < 5; i++) {
     chart = app.Chart(app.contest[i], i, names[i]);
-    chart.setMode(false);
+    chart.setMode(false, '#ffffff');
     chart.onOverMode();
     charts.push(chart);
   }
@@ -1671,8 +1707,11 @@ window.addEventListener('load', function () {
   }
 
   function setMode(isNight) {
+    var bgColor = isNight ? '#242F3E' : '#ffffff';
+    document.body.style.backgroundColor = bgColor;
+
     for (var i = 0; i < 5; i++) {
-      charts[i].setMode(isNight);
+      charts[i].setMode(isNight, bgColor);
     }
   }
 
