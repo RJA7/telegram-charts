@@ -285,7 +285,7 @@ app.Header = function (parent, chartName, cb) {
   }
 };
 
-app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) {
+app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPercentage, cb) {
   var index = 0, i, j,
     bgInputEnabled = false,
     nameEls = [],
@@ -296,6 +296,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
     overlayLeft, overlayRight,
     circles = [],
     mainTexts = [],
+    percentTexts = [],
     mainTextContainer,
     getMainText = getMainTextOverview,
     defaultTextColor = '#000000',
@@ -339,7 +340,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
   view.add(bg);
 
   mainTextContainer = new app.E('div');
-  mainTextContainer.sX(10);
+  mainTextContainer.sX(6);
   mainTextContainer.sY(4);
   bg.add(mainTextContainer);
 
@@ -363,15 +364,22 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
     var nameEl = new app.E('div');
     bg.add(nameEl);
     nameEl.sC('info-name');
-    nameEl.sX(10);
+    nameEl.sX(isPercentage ? 40 : 10);
     nameEls.push(nameEl);
 
     var valueEl = new app.E('div');
     valueEl.sC('info-val');
-    valueEl.sC('tw');
     valueEl.e.style.right = 8 + 'px';
     bg.add(valueEl);
     valueEls.push(valueEl);
+
+    if (isPercentage) {
+      var percEl = new app.E('div');
+      percEl.e.style.right = 108 + 'px';
+      percEl.e.style.fontWeight = 'bold';
+      bg.add(percEl);
+      percentTexts.push(percEl);
+    }
   }
 
   diagram.view.onDown(function () {
@@ -450,7 +458,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
   function render() {
     var localY = chart.getInputY() - diagram.view.y,
       localX = chart.getInputX() - diagram.view.x,
-      len, step, i, j, y, n, l, sum, value, valueEl, nameEl, elemsToShow = [], btnName, btnColor;
+      len, step, i, j, y, n, l, sum, value, valueEl, nameEl, percEl, btnName, btnColor;
 
     len = scrollBar.rightIndex - scrollBar.leftIndex;
     step = diagram.view.w / len;
@@ -494,13 +502,15 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
     for (i = 0, n = 0, l = nameEls.length, sum = 0; i < l; i++) {
       valueEl = valueEls[i];
       nameEl = nameEls[i];
+      percEl = percentTexts[i];
 
-      if (i === buttons.views.length && i > 1 && !isSingle) {
+      if (i === buttons.views.length && i > 1 && !isSingle && !isPercentage) {
         value = app.format(sum);
         btnName = 'All';
         btnColor = defaultTextColor;
         valueEl.sC('bold');
       } else if (!buttons.views[i] || !buttons.views[i].isActive) {
+        percEl && percEl.sS(1, 0);
         nameEl.sS(1, 0);
         valueEl.sS(1, 0);
         nameEl.sT('');
@@ -523,10 +533,14 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, cb) 
       nameEl.sT(btnName);
       nameEl.e.style.color = defaultTextColor;
       valueEl.e.style.color = btnColor || defaultTextColor;
+      valueEl.sT(value);
 
-      if (valueEls[i].e.innerHTML !== value) {
-        valueEl.sS(1, 0);
-        setTimeout(show, 80, valueEl, value);
+      if (percEl) {
+        percEl.sS(1, 1);
+        percEl.sT(diagram.getPercent(i, scrollBar.leftIndex + index).toFixed(0) + '%');
+        percEl && percEl.sS(1, 1);
+        percEl.sY(y);
+        percEl.e.style.color = defaultTextColor;
       }
 
       n++;
@@ -886,7 +900,7 @@ app.Chart = function (contest, chartIndex, chartName) {
   hLines = new app.HLines(overview.y_scaled ? [overview.colors.y0, overview.colors.y1] : ['']);
 
   var Diagram = app.Diagram; //overview.percentage ? app.DiagramP : app.Diagram;
-  diagram = Diagram(400, 250, buttons, hLines, true);
+  diagram = Diagram(400, 250, buttons, hLines, true, isSingle);
   diagram.view.sX(0);
   diagram.view.sY(80);
   view.add(diagram.view);
@@ -897,7 +911,7 @@ app.Chart = function (contest, chartIndex, chartName) {
   view.add(scrollBar.view);
 
   var maxColsLen = (data[0] || overview).columns.length - 1;
-  info = app.Info(chart, diagram, scrollBar, buttons, isSingle, maxColsLen, onDatMode);
+  info = app.Info(chart, diagram, scrollBar, buttons, isSingle, maxColsLen, overview.percentage, onDatMode);
 
   function onButtonClick() {
     scrollBar.renderDiagram();
@@ -972,7 +986,7 @@ app.Chart = function (contest, chartIndex, chartName) {
   };
 };
 
-app.Diagram = function (width, height, buttons, hLines, addReserve) {
+app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
   var colX, cols, yScaled, stacked, types,
     prevScaleX = 0, prevScaleY = [], prevMaxY = [],
     prevLeftIndex = -1, prevRightIndex, animate, steps = 5, colsLength,
@@ -985,6 +999,7 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
     stack = [],
     curDat,
     calcBounds,
+    multipliers,// percentage
     canvasReserveX = addReserve ? 400 : 0, modeConfig;
 
   var view = new app.E('div');
@@ -1042,7 +1057,6 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
     colX = dat.columns[0].slice(1);
     types = dat.types;
     yScaled = dat.y_scaled;
-    stacked = dat.stacked || types.y0 === 'bar';
 
     cols = dat.columns.slice(1).map(function (col) {
       col = col.slice(1);
@@ -1052,7 +1066,10 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
 
     colsLength = cols.length;
 
-    if (stacked) {
+    if (dat.percentage) { // for scroll only
+      render = renderPercentage;
+      calcBounds = percentageCalcBounds;
+    } else if (stacked) {
       render = renderStacked;
       calcBounds = stackedCalcBounds;
     } else {
@@ -1083,10 +1100,12 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
     overlayLayer: overlayLayer,
 
     setOver: function (overview) {
+      stacked = overview.stacked || isSingle;
       init(overview);
     },
 
     setDat: function (dat) {
+      stacked = dat.stacked;
       init(dat);
     },
 
@@ -1096,6 +1115,10 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
 
     getY: function (colIndex, index) {
       return (cols[colIndex][index] - minY[colIndex]) * scaleY[colIndex];
+    },
+
+    getPercent: function (colIndex, index) {
+      return cols[colIndex][index] * multipliers[index];
     },
 
     render: function (leftIndex, rightIndex, axisX) {
@@ -1211,6 +1234,59 @@ app.Diagram = function (width, height, buttons, hLines, addReserve) {
       ctx.fillStyle = modeConfig.lines[curDat.columns[i + 1][0]];
       ctx.fill();
     }
+  }
+
+  function renderPercentage(leftIndex, rightIndex) {
+    var i, j, stack = [], x, y, offsetX, col;
+    offsetX = (colX[rightIndex] - minX) * scaleX / (rightIndex - leftIndex);
+
+    for (j = leftIndex; j <= rightIndex; j++) {
+      stack[j] = 100;
+    }
+
+    for (i = cols.length - 1; i >= 0; i--) {
+      if (!buttons.views[i].isActive) continue;
+      col = cols[i];
+
+      x = (colX[leftIndex] - minX) * scaleX;
+
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, stack[leftIndex] * mainScaleY);
+
+      for (j = leftIndex; j <= rightIndex; j++, x += offsetX) {
+        y = stack[j] * mainScaleY;
+        stack[j] -= col[j] * multipliers[j];
+        ctx.lineTo(x, y);
+      }
+
+      ctx.lineTo(x, 0);
+      ctx.closePath();
+
+      ctx.fillStyle = modeConfig.lines[curDat.columns[i + 1][0]];
+      ctx.fill();
+    }
+  }
+
+  function percentageCalcBounds(leftIndex, rightIndex, newLeftIndex, newRightIndex) {
+    var i, j;
+    multipliers = [];
+    multipliers.length = 0;
+
+    for (j = newLeftIndex; j <= newRightIndex; j++) {
+      var sum = 0;
+
+      for (i = 0; i < colsLength; i++) {
+        if (!buttons.views[i].isActive) continue;
+        sum += cols[i][j];
+      }
+
+      multipliers[j] = 100 / sum;
+    }
+
+    mainMinY = 0;
+    mainMaxY = 100;
+    calcBoundsCommon(leftIndex, rightIndex);
   }
 
   function stackedCalcBounds(leftIndex, rightIndex, newLeftIndex, newRightIndex) {
@@ -1342,7 +1418,7 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
   view.sW(width);
   view.sH(height);
 
-  diagram = app.Diagram(width, height, buttons);
+  diagram = app.Diagram(width, height, buttons, null, false, isSingle);
   view.add(diagram.view);
 
   frame = new Elem('div');
