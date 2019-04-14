@@ -174,12 +174,15 @@ app.Header = function (parent, chartName, cb) {
   parent.add(zoomOutContainer);
 
   zoomOutContainer.onDown(function () {
-    zoomOutContainer.inputEnabled && cb();
+    if (zoomOutContainer.inputEnabled) {
+      app.showTap();
+      cb();
+    }
   });
 
   icon = document.createElement('img');
   icon.src = 'img/zoom-out.png';
-  icon.classList.add('zoom-icon');
+  app.E.addClass(icon, 'zoom-icon');
   zoomOutContainer.e.appendChild(icon);
 
   zoomOut = new app.E('div');
@@ -363,7 +366,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
   }
 
   arrow = document.createElement('i');
-  arrow.classList.add('arrow-right');
+  app.E.addClass(arrow, 'arrow-right');
   arrow.style.right = 7 + 'px';
   arrow.style.top = 7 + 'px';
   arrow.style.position = 'absolute';
@@ -434,9 +437,8 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
 
   function onBgClick(e) {
     if (!bgInputEnabled) return;
-    e.preventDefault();
     e.stopPropagation();
-
+    app.showTap();
     cb(index);
   }
 
@@ -605,6 +607,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
       arrow.style.borderColor = isNight ? '#D2D5D7' : '#D2D5D7';
       defaultTextColor = isNight ? '#ffffff' : '#000000';
       cirleBgColor = bgColor;
+      line.e.style.backgroundColor = isNight ? 'rgba(255,255,255,0.1)' : 'rgba(24,45,59,0.1)';
     },
 
     render: render,
@@ -664,8 +667,10 @@ app.Buttons = function (parent, isSingle, dat, cb) {
       btn.tick.sS(s, s);
 
       btn.e.style.backgroundColor = btn.isActive ? btn.color : mainBgColor;
+      btn.text.e.style.color = btn.isActive ? '#ffffff' : btn.color;
     }
 
+    app.showTap();
     cb(buttons);
   }
 
@@ -698,7 +703,7 @@ app.Buttons = function (parent, isSingle, dat, cb) {
       timeout = setTimeout(turnOffAllBeside, 200, button);
     });
 
-    button.onUp(function onUp() {
+    app.i.upHandlers.push(function onUp() {
       if (!button.isDown || Date.now() - downTime > 200) return;
       button.isDown = false;
 
@@ -711,10 +716,12 @@ app.Buttons = function (parent, isSingle, dat, cb) {
 
       button.isActive = !button.isActive;
       button.e.style.backgroundColor = button.isActive ? button.color : mainBgColor;
+      text.e.style.color = button.isActive ? '#ffffff' : button.color;
 
       var s = button.isActive ? 1 : 0;
       tick.sS(s, s);
 
+      app.showTap();
       cb(buttons);
     });
 
@@ -924,7 +931,7 @@ app.Chart = function (contest, chartIndex, chartName) {
   view = new Elem('div');
   body.appendChild(view.e);
   view.sW(400);
-  view.sH(540);
+  view.sH(640);
   view.sC('chart');
 
   header = app.Header(view, chartName, onOverMode);
@@ -1076,7 +1083,7 @@ app.Chart = function (contest, chartIndex, chartName) {
       scrollBar.diagram.bgColor = bgColor;
 
       if (diagramP) {
-        diagramP.setConfig({bgColor: bgColor, colors: config.lines});
+        diagramP.setConfig({bgColor: bgColor, colors: config.lines, isNight: isNight});
       }
 
       if (isInited) {
@@ -1194,7 +1201,7 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
       canvas.style.height = canvas.height + 'px';
       canvas.style.top = 0 + 'px';
       canvas.style.left = 0 + 'px';
-      canvas.classList.add('tween');
+      app.E.addClass(canvas, 'tween');
     }
   }
 
@@ -1271,7 +1278,7 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
           canvas.style.height = (parseInt(canvas.style.height)) * prevScaleY[i] / scaleY[i] + 'px';
 
           canvas.style.width = (parseInt(canvas.style.width)) * prevScaleX / scaleX + 'px';
-          canvas.classList.remove('tween');
+          app.E.removeClass(canvas, 'tween');
 
           var canvasContainerX = canvasContainer.x;
           canvasContainer.sX((colX[newLeftIndex] - minX) * scaleX);
@@ -1545,11 +1552,16 @@ app.DiagramP = function (width, height, buttons) {
     radius = 115, isDisabled = true, sprites = [], sprite, config = {};
 
   var view = new app.E('div');
-  view.e.style.overflow = 'hidden';
   view.sC('tween');
   view.sW(width);
   view.sH(height);
   view.e.style.visibility = 'hidden';
+
+  var overflow = new app.E('div');
+  overflow.e.style.overflow = 'hidden';
+  overflow.sW(width);
+  overflow.sH(height);
+  view.add(overflow);
 
   canvas = document.createElement('canvas');
   ctx = canvas.getContext('2d', {alpha: false});
@@ -1557,7 +1569,7 @@ app.DiagramP = function (width, height, buttons) {
   canvas.height = height;
   canvas.style.height = height + 'px';
   canvas.style.position = 'absolute';
-  view.e.appendChild(canvas);
+  overflow.e.appendChild(canvas);
 
   for (var i = 0; i < 6; i++) {
     sprite = new Sprite(view);
@@ -1567,10 +1579,32 @@ app.DiagramP = function (width, height, buttons) {
     sprite.id = 'y' + i;
     sprites.push(sprite);
 
-    sprite.text.onDown(onClick.bind(this, sprite));
+    sprite.text.onDown(onClick.bind(this, sprite, i));
   }
 
-  function onClick(sprite) {
+  var info = new app.E('div');
+  info.sC('info-bg');
+  info.sC('tween');
+  info.sW(140);
+  info.sH(22);
+  info.sO(0);
+  view.add(info);
+
+  var infoName = new app.E('div');
+  infoName.sX(10);
+  infoName.sY(3);
+  infoName.e.style.fontSize = '14px';
+  info.add(infoName);
+
+  var infoValue = new app.E('div');
+  infoValue.e.style.right = 10 + 'px';
+  infoValue.sY(3);
+  infoValue.e.style.fontSize = '13px';
+  info.add(infoValue);
+
+  function onClick(sprite, index) {
+    app.showTap();
+
     for (var i = 0; i < sprites.length; i++) {
       sprites[i].target.x = centerX;
       sprites[i].target.y = centerY;
@@ -1579,6 +1613,13 @@ app.DiagramP = function (width, height, buttons) {
     var mAngle = (sprite.startAngle + sprite.endAngle) / 2;
     sprite.target.x = centerX + Math.cos(mAngle) * 10;
     sprite.target.y = centerY + Math.sin(mAngle) * 10;
+
+    info.sX(sprite.text.x + (sprite.text.x > 200 ? 20 : -140));
+    info.sY(sprite.text.y - 30);
+    info.sO(1);
+    infoName.sT(buttons.views[index].name);
+    infoValue.sT(app.format(sprite.sum));
+    infoValue.e.style.color = buttons.views[index].tooltipColor;
   }
 
   function hide() {
@@ -1631,6 +1672,8 @@ app.DiagramP = function (width, height, buttons) {
 
     moveToCircle: function (leftIndex, rightIndex, dat) {
       if (isDisabled) return;
+
+      info.sO(0);
       leftIndex += 1;
       rightIndex += 1;
 
@@ -1681,6 +1724,8 @@ app.DiagramP = function (width, height, buttons) {
 
     setConfig(conf) {
       config = conf;
+      info.e.style.backgroundColor = conf.isNight ? '#1C2533' : '#ffffff';
+      infoName.e.style.color = conf.isNight ? '#ffffff' : '#000000';
     }
   }
 };
@@ -1919,7 +1964,6 @@ app.i = (function () {
   }
 
   function onTouchStart(e) {
-    e.preventDefault();
     onMouseDown(e.touches[0]);
   }
 
@@ -1948,7 +1992,6 @@ app.i = (function () {
   }
 
   function onTouchMove(e) {
-    e.preventDefault();
     onMouseMove(e.touches[0]);
   }
 
@@ -2029,16 +2072,16 @@ app.E = (function () {
   };
 
   p.sC = function (addClass) {
-    this.e.classList.add(addClass);
-  };
-
-  p.tC = function (addClass, removeClass) {
-    this.e.classList.add(addClass);
-    this.e.classList.remove(removeClass);
+    E.addClass(this.e, addClass);
   };
 
   p.rC = function (removeClass) {
-    this.e.classList.remove(removeClass);
+    E.removeClass(this.e, removeClass);
+  };
+
+  p.tC = function (addClass, removeClass) {
+    E.addClass(this.e, addClass);
+    E.removeClass(this.e, removeClass);
   };
 
   p.sT = function (text) {
@@ -2060,12 +2103,43 @@ app.E = (function () {
     this.e.style.opacity = opacity;
   };
 
+  function classReg(className) {
+    return new RegExp('(^|\\s+)' + className + '(\\s+|$)');
+  }
+
+  if ('classList' in document.documentElement) {
+    E.hasClass = function (elem, c) {
+      return elem.classList.contains(c);
+    };
+    E.addClass = function (elem, c) {
+      elem.classList.add(c);
+    };
+    E.removeClass = function (elem, c) {
+      elem.classList.remove(c);
+    };
+  } else {
+    E.hasClass = function (elem, c) {
+      return classReg(c).test(elem.className);
+    };
+
+    E.addClass = function (elem, c) {
+      if (!E.hasClass(elem, c)) {
+        elem.className = elem.className + ' ' + c;
+      }
+    };
+
+    E.removeClass = function (elem, c) {
+      elem.className = elem.className.replace(classReg(c), ' ');
+    };
+  }
+
   return E;
 }());
 
 window.addEventListener('load', function () {
   var chart, charts = [];
   var names = ['Followers', 'Interactions', 'Messages', 'Views', 'Apps'];
+  var isNight = true;
 
   for (var i = 0; i < 5; i++) {
     chart = app.Chart(app.contest[i], i, names[i]);
@@ -2074,32 +2148,109 @@ window.addEventListener('load', function () {
     charts.push(chart);
   }
 
+  var header = document.getElementById('header');
+  var headerContent = document.getElementById('header-content');
+  var headTxt = new app.E('div');
+  headTxt.sC('main-title');
+  headTxt.sT('TCharts');
+  headerContent.appendChild(headTxt.e);
+
+  var modeText = new app.E('div');
+  modeText.sC('mode-text');
+  modeText.sC('pointer');
+  modeText.sT('Switch to Night Mode');
+  headerContent.appendChild(modeText.e);
+  modeText.onDown(function () {
+    app.showTap();
+    setMode();
+  });
+
+  var inputCircle = new app.E('div');
+  inputCircle.sC('input-circle');
+  document.body.appendChild(inputCircle.e);
+
+  app.i.downHandlers.push(function () {
+    inputCircle.e.style.transform = 'scale(1,1)';
+    inputCircle.sX(app.i.x - 50 + app.getScrollX());
+    inputCircle.sY(app.i.y - 50 + app.getScrollY());
+  });
+
+  app.i.moveHandlers.push(function () {
+    inputCircle.sX(app.i.x - 50 + app.getScrollX());
+    inputCircle.sY(app.i.y - 50 + app.getScrollY());
+  });
+
+  app.i.upHandlers.push(function () {
+    inputCircle.e.style.transform = 'scale(0,0)';
+  });
+
+  var tapAnim = new app.E('div');
+  tapAnim.sC('tap-anim');
+  tapAnim.e.style.transform = 'scale(0,0)';
+  tapAnim.isReady = true;
+  document.body.appendChild(tapAnim.e);
+  tapReady();
+
+  function tapReady() {
+    tapAnim.rC('tweeen');
+    tapAnim.sS(0, 0);
+    tapAnim.sO(1);
+    tapAnim.isReady = true;
+  }
+
+  function animteTap() {
+    tapAnim.sC('tweeen');
+    tapAnim.sS(1, 1);
+    tapAnim.sO(0);
+  }
+
+  app.showTap = function () {
+    if (!tapAnim.isReady) return;
+    tapAnim.isReady = false;
+
+    tapAnim.sX(app.i.x - 120 + app.getScrollX());
+    tapAnim.sY(app.i.y - 120 + app.getScrollY());
+
+    setTimeout(animteTap, 0);
+    setTimeout(tapReady, 400);
+  };
+
   onResize();
+  setMode();
   window.addEventListener('resize', onResize);
 
   function onResize() {
     var offset = 25;
-    var sc = Math.min(1, window.innerWidth / (400 + offset * 2));
+    var sc = Math.min(1.2, window.innerWidth / (400 + offset * 2));
+    var x = window.innerWidth / 2 - 200 * sc;
 
     for (var i = 0, l = charts.length; i < l; i++) {
       chart = charts[i];
-      chart.view.sX(offset * sc);
-      chart.view.sY((20 + 560 * i) * sc);
+      chart.view.sX(x);
+      chart.view.sY((60 + 640 * i) * sc);
       chart.view.sS(sc, sc);
       chart.view.sc = sc;
     }
+
+    headerContent.style.left = x + 'px';
+    headerContent.style.transform = 'scale(' + sc + ',' + sc + ')';
   }
 
-  function setMode(isNight) {
+  function setMode() {
+    isNight = !isNight;
     var bgColor = isNight ? '#242F3E' : '#ffffff';
     document.body.style.backgroundColor = bgColor;
+    header.style.backgroundColor = bgColor;
+    headTxt.e.style.color = isNight ? '#ffffff' : '#000000';
+    modeText.e.style.color = isNight ? '#48AAF0' : '#108BE3';
+    header.style.borderBottom = '2px solid rgba(0,0,0,' + (isNight ? 0.16 : 0.03) + ')';
+    inputCircle.e.style.backgroundColor = isNight  ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)';
+    tapAnim.e.style.border = '20px solid ' + (isNight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.08)');
 
     for (var i = 0; i < 5; i++) {
       charts[i].setMode(isNight, bgColor);
     }
   }
-
-  setTimeout(setMode, 1000, true);
 });
 
 app.format = function (number) {
