@@ -1,4 +1,4 @@
-app.HLines = function (axes) {
+app.HLines = function (axes, buttons) {
   var lines = [], line, hash = {}, oldHash = {}, prevMainMinY, prevScaleY,
     lineColor = '#ffffff', textColor = '#ffffff';
 
@@ -70,7 +70,9 @@ app.HLines = function (axes) {
     setMode: function (isNight, config) {
       lineColor = isNight ? 'rgba(255,255,255,0.1)' : 'rgba(24,45,59,0.1)';
       textColor = config.axisText.y || config.axisText;
-      lines.forEach(line => setLineColor(line, lineColor, textColor));
+      lines.forEach(function (line) {
+        setLineColor(line, lineColor, textColor);
+      });
 
       for (var key in oldHash) {
         setLineColor(oldHash[key], lineColor, textColor);
@@ -128,6 +130,12 @@ app.HLines = function (axes) {
         for (j = 0; j < axes.length; j++) {
           text = line.texts[j];
           text.sT(app.format(minY[j] + offsetY[j] * i));
+        }
+
+        if (axes.length > 1) {
+          for (j = 0; j < axes.length; j++) {
+            line.texts[j].sO(buttons.views[j].isActive ? 1 : 0);
+          }
         }
 
         hash[line.index] = line;
@@ -280,7 +288,9 @@ app.Header = function (parent, chartName, cb) {
       var defaultTextColor = isNight ? '#ffffff' : '#000000';
       zoomOut.e.style.color = isNight ? '#48AAF0' : '#108BE3';
       title.e.style.color = defaultTextColor;
-      rangeTexts.forEach(text => text.e.style.color = defaultTextColor);
+      rangeTexts.forEach(function (text) {
+        text.e.style.color = defaultTextColor;
+      });
     },
 
     setRange: function (leftIndex, rightIndex) {
@@ -521,7 +531,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
       nameEl = nameEls[i];
       percEl = percentTexts[i];
 
-      if (i === buttons.views.length && i > 1 && !isSingle && !isPercentage) {
+      if (i === buttons.views.length && n > 1 && !isSingle && !isPercentage) {
         value = app.format(sum);
         btnName = 'All';
         btnColor = defaultTextColor;
@@ -535,8 +545,8 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
 
         continue;
       } else {
-        sum += cols[i][index + 1];
-        value = app.format(cols[i][index + 1]);
+        sum += cols[i][scrollBar.leftIndex + index + 1];
+        value = app.format(cols[i][scrollBar.leftIndex + index + 1]);
         btnName = buttons.views[i].name;
         btnColor = buttons.views[i].tooltipColor;
         valueEl.rC('bold');
@@ -753,7 +763,7 @@ app.Buttons = function (parent, isSingle, dat, cb) {
     setMode: function (isNight, config, bgColor) {
       mainBgColor = bgColor;
 
-      buttons.forEach((button, i) => {
+      buttons.forEach(function (button, i) {
         button.color = config.buttons[dat.columns[i + 1][0]];
         button.tooltipColor = config.tooltip[dat.columns[i + 1][0]];
         button.e.style.borderColor = button.color;
@@ -833,7 +843,9 @@ app.AxisX = function (parent) {
 
     setMode: function (isNight, config) {
       textColor = config.axisText.x || config.axisText;
-      elems.forEach(elem => elem.e.style.color = textColor);
+      elems.forEach(function (elem) {
+        elem.e.style.color = textColor;
+      });
 
       for (var key in oldHash) {
         oldHash[key].e.style.color = textColor;
@@ -937,7 +949,7 @@ app.Chart = function (contest, chartIndex, chartName) {
   header = app.Header(view, chartName, onOverMode);
   buttons = app.Buttons(view, isSingle, data[0] || overview, onButtonClick);
 
-  hLines = new app.HLines(overview.y_scaled ? [overview.colors.y0, overview.colors.y1] : ['']);
+  hLines = new app.HLines(overview.y_scaled ? [overview.colors.y0, overview.colors.y1] : [''], buttons);
 
   diagram = app.Diagram(400, 250, buttons, hLines, true, isSingle);
   diagram.view.sX(0);
@@ -1601,7 +1613,7 @@ app.DiagramP = function (width, height, buttons, chart) {
   infoValue.e.style.fontSize = '13px';
   info.add(infoValue);
 
-  view.onDown(function () {
+  function onDown() {
     var localX = chart.getInputX() - view.x;
     var localY = chart.getInputY() - view.y;
     var dx = localX - centerX;
@@ -1618,6 +1630,10 @@ app.DiagramP = function (width, height, buttons, chart) {
         return;
       }
     }
+  }
+
+  view.onDown(function () {
+    setTimeout(onDown, 1);
   });
 
   function onClick(sprite, index) {
@@ -1634,7 +1650,7 @@ app.DiagramP = function (width, height, buttons, chart) {
     sprite.target.x = centerX + cos;
     sprite.target.y = centerY + sin;
 
-    info.sX(sprite.text.x + cos + (sprite.text.x > 200 ? 20 : -140));
+    info.sX(sprite.text.x + cos + (sprite.text.x > 200 ? -10 : -120));
     info.sY(sprite.text.y + sin - 30);
     info.sO(1);
     infoName.sT(buttons.views[index].name);
@@ -1742,7 +1758,7 @@ app.DiagramP = function (width, height, buttons, chart) {
       setTimeout(hide, 400);
     },
 
-    setConfig(conf) {
+    setConfig: function (conf) {
       config = conf;
       info.e.style.backgroundColor = conf.isNight ? '#1C2533' : '#ffffff';
       infoName.e.style.color = conf.isNight ? '#ffffff' : '#000000';
@@ -1767,16 +1783,6 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
 
   diagram = app.Diagram(width, height, buttons, null, false, isSingle);
   view.add(diagram.view);
-
-  frame = new Elem('div');
-  frame.sY(-offsetTB);
-  frame.sH(height + offsetTB * 2);
-  frame.sC('frame');
-  frame.sC('tween');
-  view.add(frame);
-  frame.onDown(function () {
-    moveHandler = frameMove;
-  });
 
   sides = [leftSideMove, rightSideMove].map(function (handler, i) {
     var overlay = new Elem('div');
@@ -1808,6 +1814,16 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
     side.overlay = overlay;
 
     return side;
+  });
+
+  frame = new Elem('div');
+  frame.sY(-offsetTB);
+  frame.sH(height + offsetTB * 2);
+  frame.sC('frame');
+  frame.sC('tween');
+  view.add(frame);
+  frame.onDown(function () {
+    moveHandler = frameMove;
   });
 
   function updateAnchors(dat, checkCb) {
@@ -1874,9 +1890,15 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
       var sideColor = isNight ? '#56626D' : '#C0D1E1';
       frame.e.style.borderColor = sideColor;
 
-      sides.forEach(side => {
+      sides.forEach(function (side) {
         side.overlay.e.style.backgroundColor = overlayColor;
         side.e.style.backgroundColor = sideColor;
+
+        if (isNight) {
+          side.e.style.border = 'none';
+        } else {
+          side.e.style.borderLeft = side.e.style.borderRight = '2px solid #ffffff';
+        }
       });
     },
 
@@ -1906,7 +1928,7 @@ app.ScrollBar = function (chart, buttons, isSingle, cb) {
     sideLeft.sX(leftIndex / totalDays * width - sideWidth);
     sideRight.sX(rightIndex / totalDays * width);
     frame.sX(sideLeft.x + sideWidth);
-    frame.sW(sideRight.x - sideLeft.x - sideWidth);
+    frame.sW(sideRight.x - sideLeft.x - sideWidth + 4);
 
     sideLeft.overlay.sW(Math.max(0, sideLeft.x + sideWidth));
     sideRight.overlay.sW(view.w - sideRight.x);
@@ -2253,6 +2275,7 @@ window.addEventListener('load', function () {
     }
 
     headerContent.style.left = x + 'px';
+    headerContent.style.top = 8 / sc + 'px';
     headerContent.style.transform = 'scale(' + sc + ',' + sc + ')';
   }
 
@@ -2261,9 +2284,9 @@ window.addEventListener('load', function () {
     var bgColor = isNight ? '#242F3E' : '#ffffff';
     document.body.style.backgroundColor = bgColor;
     header.style.backgroundColor = bgColor;
+    header.style.borderBottom = '2px solid rgba(0,0,0,' + (isNight ? 0.16 : 0.03) + ')';
     headTxt.e.style.color = isNight ? '#ffffff' : '#000000';
     modeText.e.style.color = isNight ? '#48AAF0' : '#108BE3';
-    header.style.borderBottom = '2px solid rgba(0,0,0,' + (isNight ? 0.16 : 0.03) + ')';
     inputCircle.e.style.backgroundColor = isNight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)';
     tapAnim.e.style.border = '20px solid ' + (isNight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.08)');
 
