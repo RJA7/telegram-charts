@@ -122,7 +122,7 @@ app.HLines = function (axes, buttons) {
           line.index = y;
           line.sO(1);
           line.sB((y - prevMainMinY) * prevScaleY);
-          setTimeout(addTween, 0, line, (y - mainMinY) * mainScaleY);
+          setTimeout(addTween, 20, line, (y - mainMinY) * mainScaleY);
         } else {
           line.sB((y - mainMinY) * mainScaleY);
         }
@@ -410,11 +410,11 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
     view.sO(1);
     diagram.overlayLayer.sO(1);
 
-    setTimeout(function () {
+    // setTimeout(function () {
       bgInputEnabled = true;
       bg.e.style.cursor = 'pointer';
       render();
-    }, 0);
+    // }, 1);
   });
 
   for (i = 0; i < colsLen; i++) {
@@ -449,7 +449,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
     if (!bgInputEnabled) return;
     e.stopPropagation();
     app.showTap();
-    cb(index);
+    cb(scrollBar.leftIndex + index);
   }
 
   function getMainTextOverview(date) {
@@ -591,7 +591,8 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
   function reset(dat) {
     colX = dat.columns[0];
     cols = dat.columns.slice(1);
-    setTimeout(render, 0);
+    // render();
+    setTimeout(render, 1);
   }
 
   return {
@@ -895,7 +896,7 @@ app.AxisX = function (parent) {
           elem.sO(1);
           elem.sT(texts[i]);
           elem.sX((colX[i] - colX[prevLeftIndex]) * prevScaleX);
-          setTimeout(addTween, 1, elem, (colX[i] - colX[leftIndex]) * scaleX);
+          setTimeout(addTween, 20, elem, (colX[i] - colX[leftIndex]) * scaleX);
         } else {
           elem.sX((colX[i] - colX[leftIndex]) * scaleX);
         }
@@ -1301,7 +1302,7 @@ app.Diagram = function (width, height, buttons, hLines, addReserve, isSingle) {
           prevMaxY[i] = maxY[i];
         }
 
-        setTimeout(startAnimation, 0);
+        setTimeout(startAnimation, 20);
       }
 
       prevScaleX = scaleX;
@@ -1633,7 +1634,7 @@ app.DiagramP = function (width, height, buttons, chart) {
   }
 
   view.onDown(function () {
-    setTimeout(onDown, 1);
+    setTimeout(onDown, 20);
   });
 
   function onClick(sprite, index) {
@@ -2240,21 +2241,25 @@ window.addEventListener('load', function () {
     tapAnim.isReady = true;
   }
 
-  function animteTap() {
+  function animateTap() {
     tapAnim.sC('tweeen');
     tapAnim.sS(1, 1);
     tapAnim.sO(0);
   }
 
-  app.showTap = function () {
+  function delayedShowTap() {
     if (!tapAnim.isReady) return;
     tapAnim.isReady = false;
 
     tapAnim.sX(app.i.x - 120 + app.getScrollX());
     tapAnim.sY(app.i.y - 120 + app.getScrollY());
 
-    setTimeout(animteTap, 0);
+    setTimeout(animateTap, 20);
     setTimeout(tapReady, 400);
+  }
+
+  app.showTap = function () {
+    setTimeout(delayedShowTap, 1);
   };
 
   onResize();
@@ -2284,11 +2289,12 @@ window.addEventListener('load', function () {
     var bgColor = isNight ? '#242F3E' : '#ffffff';
     document.body.style.backgroundColor = bgColor;
     header.style.backgroundColor = bgColor;
-    header.style.borderBottom = '2px solid rgba(0,0,0,' + (isNight ? 0.16 : 0.03) + ')';
+    header.style.borderBottom = '2px solid rgba(0,0,0,' + (isNight ? 0.16 : 0.08) + ')';
     headTxt.e.style.color = isNight ? '#ffffff' : '#000000';
     modeText.e.style.color = isNight ? '#48AAF0' : '#108BE3';
+    modeText.sT(isNight ? 'Switch to Day Mode' : 'Switch to Night Mode');
     inputCircle.e.style.backgroundColor = isNight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)';
-    tapAnim.e.style.border = '20px solid ' + (isNight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.08)');
+    tapAnim.e.style.border = '20px solid ' + (isNight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)');
 
     for (var i = 0; i < 5; i++) {
       charts[i].setMode(isNight, bgColor);
