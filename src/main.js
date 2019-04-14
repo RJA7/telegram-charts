@@ -945,7 +945,7 @@ app.Chart = function (contest, chartIndex, chartName) {
   view.add(diagram.view);
 
   if (overview.percentage) {
-    diagramP = app.DiagramP(400, 250, buttons);
+    diagramP = app.DiagramP(400, 250, buttons, chart);
     diagramP.view.sX(0);
     diagramP.view.sY(80);
     view.add(diagramP.view);
@@ -1545,11 +1545,12 @@ Sprite.prototype.render = function (ctx) {
   ctx.fill();
 };
 
-app.DiagramP = function (width, height, buttons) {
+app.DiagramP = function (width, height, buttons, chart) {
   var canvas, ctx,
     centerX = width * 0.5,
     centerY = height * 0.5,
-    radius = 115, isDisabled = true, sprites = [], sprite, config = {};
+    radius = 115, isDisabled = true, sprites = [], sprite, config = {},
+    radius2 = radius * radius;
 
   var view = new app.E('div');
   view.sC('tween');
@@ -1578,8 +1579,6 @@ app.DiagramP = function (width, height, buttons) {
     sprite.radius = radius;
     sprite.id = 'y' + i;
     sprites.push(sprite);
-
-    sprite.text.onDown(onClick.bind(this, sprite, i));
   }
 
   var info = new app.E('div');
@@ -1602,6 +1601,25 @@ app.DiagramP = function (width, height, buttons) {
   infoValue.e.style.fontSize = '13px';
   info.add(infoValue);
 
+  view.onDown(function () {
+    var localX = chart.getInputX() - view.x;
+    var localY = chart.getInputY() - view.y;
+    var dx = localX - centerX;
+    var dy = localY - centerY;
+
+    if (dx * dx + dy * dy > radius2) return;
+
+    var angle = Math.atan2(dy, dx);
+    angle += angle < 0 ? Math.PI * 2 : 0;
+
+    for (var i = 0; i < sprites.length; i++) {
+      if (sprites[i].startAngle < angle && sprites[i].endAngle > angle) {
+        onClick(sprites[i], i);
+        return;
+      }
+    }
+  });
+
   function onClick(sprite, index) {
     app.showTap();
 
@@ -1611,11 +1629,13 @@ app.DiagramP = function (width, height, buttons) {
     }
 
     var mAngle = (sprite.startAngle + sprite.endAngle) / 2;
-    sprite.target.x = centerX + Math.cos(mAngle) * 10;
-    sprite.target.y = centerY + Math.sin(mAngle) * 10;
+    var cos = Math.cos(mAngle) * 10;
+    var sin = Math.sin(mAngle) * 10;
+    sprite.target.x = centerX + cos;
+    sprite.target.y = centerY + sin;
 
-    info.sX(sprite.text.x + (sprite.text.x > 200 ? 20 : -140));
-    info.sY(sprite.text.y - 30);
+    info.sX(sprite.text.x + cos + (sprite.text.x > 200 ? 20 : -140));
+    info.sY(sprite.text.y + sin - 30);
     info.sO(1);
     infoName.sT(buttons.views[index].name);
     infoValue.sT(app.format(sprite.sum));
@@ -2244,7 +2264,7 @@ window.addEventListener('load', function () {
     headTxt.e.style.color = isNight ? '#ffffff' : '#000000';
     modeText.e.style.color = isNight ? '#48AAF0' : '#108BE3';
     header.style.borderBottom = '2px solid rgba(0,0,0,' + (isNight ? 0.16 : 0.03) + ')';
-    inputCircle.e.style.backgroundColor = isNight  ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)';
+    inputCircle.e.style.backgroundColor = isNight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)';
     tapAnim.e.style.border = '20px solid ' + (isNight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.08)');
 
     for (var i = 0; i < 5; i++) {
