@@ -1020,7 +1020,7 @@ app.Chart = function (contest, chartIndex, chartName) {
     var dat = data[i], newLeftIndex;
 
     if (!dat) { // percentage
-      dat = createDailyDat(overview, scrollBar.leftIndex + i);
+      dat = createDailyDat(overview, i);
     }
 
     curDat = dat;
