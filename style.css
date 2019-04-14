@@ -157,11 +157,11 @@ canvas {
 }
 
 .tw {
-    -webkit-transition: all 80ms ease-out;
-    -moz-transition: all 80ms ease-out;
-    -ms-transition: all 80ms ease-out;
-    -o-transition: all 80ms ease-out;
-    transition: all 80ms ease-out;
+    -webkit-transition: all 100ms ease-out;
+    -moz-transition: all 100ms ease-out;
+    -ms-transition: all 100ms ease-out;
+    -o-transition: all 100ms ease-out;
+    transition: all 100ms ease-out;
 }
 
 .tween {

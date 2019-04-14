@@ -35,17 +35,22 @@ app.HLines = function (axes, buttons) {
     }
 
     setLineColor(line, lineColor, textColor);
+    refreshTextsAlpha(line);
 
     return line;
   }
 
+  function clamp(y) {
+    return Math.max(0, Math.min(250, y));
+  }
+
   function addTween(elem, y) {
-    elem.sC('tween');
-    elem.sB(y);
+    elem.sC('tw');
+    elem.sB(clamp(y));
   }
 
   function release(line) {
-    line.rC('tween');
+    line.rC('tw');
     lines.push(line);
   }
 
@@ -143,10 +148,10 @@ app.HLines = function (axes, buttons) {
 
           line.index = y;
           line.sO(1);
-          line.sB((y - prevMainMinY) * prevScaleY);
+          line.sB(clamp((y - prevMainMinY) * prevScaleY));
           setTimeout(addTween, 20, line, (y - mainMinY) * mainScaleY);
         } else {
-          line.sB((y - mainMinY) * mainScaleY);
+          line.sB(clamp((y - mainMinY) * mainScaleY));
         }
 
         for (j = 0; j < axes.length; j++) {
@@ -161,7 +166,7 @@ app.HLines = function (axes, buttons) {
         line = oldHash[key];
 
         if (!hash[line.index]) {
-          line.sB((line.index - mainMinY) * mainScaleY);
+          line.sB(clamp((line.index - mainMinY) * mainScaleY));
           line.sO(0);
           setTimeout(release, 500, line);
         }
@@ -424,12 +429,11 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
   diagram.view.onDown(function () {
     if (isDisabled) return;
 
-    view.sO(1);
     diagram.overlayLayer.sO(1);
 
     bgInputEnabled = true;
     bg.e.style.cursor = 'pointer';
-    render();
+    setTimeout(render, 0);
   });
 
   for (i = 0; i < colsLen; i++) {
@@ -508,6 +512,7 @@ app.Info = function (chart, diagram, scrollBar, buttons, isSingle, colsLen, isPe
 
     if (localY < 0 || localY > diagram.view.h || localX < 0 || localX > diagram.view.w + step) return;
 
+    view.sO(1);
     index = Math.min(scrollBar.rightIndex - (isBar && !isPercentage ? 1 : 0), Math.floor(localX / step));
     localX = index * step;
 
@@ -830,7 +835,7 @@ app.AxisX = function (parent) {
 
   function addTween(elem, x) {
     elem.sC('tween');
-    elem.sX(x);
+    elem.sX(clamp(x));
   }
 
   function release(elem) {
@@ -848,6 +853,10 @@ app.AxisX = function (parent) {
     }
 
     hash = {};
+  }
+
+  function clamp(x) {
+    return Math.max(-50, Math.min(400, x));
   }
 
   return {
@@ -927,10 +936,10 @@ app.AxisX = function (parent) {
           elem.index = i;
           elem.sO(1);
           elem.sT(texts[i]);
-          elem.sX((colX[i] - colX[prevLeftIndex]) * prevScaleX);
+          elem.sX(clamp((colX[i] - colX[prevLeftIndex]) * prevScaleX));
           setTimeout(addTween, 20, elem, (colX[i] - colX[leftIndex]) * scaleX);
         } else {
-          elem.sX((colX[i] - colX[leftIndex]) * scaleX);
+          elem.sX(clamp((colX[i] - colX[leftIndex]) * scaleX));
         }
 
         hash[elem.index] = elem;
@@ -940,7 +949,7 @@ app.AxisX = function (parent) {
         elem = oldHash[key];
 
         if (!hash[elem.index]) {
-          elem.sX((colX[elem.index] - colX[leftIndex]) * scaleX);
+          elem.sX(clamp((colX[elem.index] - colX[leftIndex]) * scaleX));
           elem.sO(0);
           setTimeout(release, 500, elem);
         }
