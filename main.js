@@ -1091,10 +1091,11 @@ app.Chart = function (contest, chartIndex, chartName) {
       diagramP.moveToSquare(leftIndex, rightIndex, diagram);
       diagramP.moveToCircle(scrollBar.leftIndex, scrollBar.rightIndex, dat);
     } else {
-      newLeftIndex = Math.floor((dat.columns[0].length - 2) / 2 / 24) * 24;
+      var divisor = isSingle ? 36 : 24;
+      newLeftIndex = Math.floor((dat.columns[0].length - 2) / 2 / divisor) * divisor;
 
       diagram.setDat(dat);
-      scrollBar.setRange(newLeftIndex, newLeftIndex + 24);
+      scrollBar.setRange(newLeftIndex, newLeftIndex + divisor);
     }
 
     scrollBar.renderDiagram();
